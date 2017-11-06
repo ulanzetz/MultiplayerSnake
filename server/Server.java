@@ -76,18 +76,23 @@ class Responder implements Runnable {
                 }
             }
             else {
-                String[] splitedData = data.split(" ");
-                int x = parseInt(splitedData[0]);
-                int y = parseInt(splitedData[1]);
-                game.board.snakes[playerID].setDirection(new Point(x, y));
-                String mes = "";
-                for(int i = 0; i != game.gameMode.snakeCount; ++i) {
-                    for(Point p: game.board.snakes[i].snakePoints)
-                        mes += p.x + "," + p.y + ' ';
-                    mes += game.board.snakes[i].score + "'";
+                try {
+                    String[] splitedData = data.split(" ");
+                    int x = parseInt(splitedData[0]);
+                    int y = parseInt(splitedData[1]);
+                    game.board.snakes[playerID].setDirection(new Point(x, y));
+                    String mes = "";
+                    for (int i = 0; i != game.gameMode.snakeCount; ++i) {
+                        for (Point p : game.board.snakes[i].snakePoints)
+                            mes += p.x + "," + p.y + ' ';
+                        mes += game.board.snakes[i].score + "'";
+                    }
+                    mes += game.board.fruitPos.x + "," + game.board.fruitPos.y + "'";
+                    sendData = mes.getBytes();
                 }
-                mes += game.board.fruitPos.x + "," + game.board.fruitPos.y + "'";
-                sendData = mes.getBytes();
+                catch (Exception e) {
+                    continue;
+                }
             }
             packet = new DatagramPacket(sendData, sendData.length, ip, clientPort);
             try {
