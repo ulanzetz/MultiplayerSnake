@@ -13,7 +13,7 @@ public class Game implements ActionListener, Serializable {
     public Board board;
     public GameMode gameMode;
     private int fruitTimer;
-    private int delay;
+    public int delay;
     private Panel panel;
     private Client client;
 
