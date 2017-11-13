@@ -38,10 +38,6 @@ class Responder implements Runnable {
     private Game game;
     private static int connectedPlayers = 0;
     private static HashMap<String, Integer> playersIDs = new HashMap<>();
-<<<<<<< HEAD
-=======
-    private static int connectedPlayers = 0;
->>>>>>> 1d99c3718b1b9dedbfd670d5ea05361aba3d7d4d
     private String modeName;
     private int playerID;
 
