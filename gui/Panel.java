@@ -90,7 +90,11 @@ public class Panel extends JPanel  {
             for (int i = 0; i != gameMode.snakeCount; ++i)
                 for(int j = 0; j != 4; ++j)
                     if(playersControls[i][j] == key)
-                        board.snakes[i].setDirection(Direction.getDirection(j));
+                        try {
+                            board.snakes[i].setDirection(Direction.getDirection(j));
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                        }
         }
     }
 }

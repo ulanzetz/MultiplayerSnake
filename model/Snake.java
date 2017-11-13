@@ -67,9 +67,11 @@ public class Snake implements Serializable {
                         2 * firstTail.y - secondTail.y));
     }
 
-    public void setDirection(Point newDir){
+    public void setDirection(Point newDir) throws Exception {
         if(newDir.equals(new Point(-direction.x, -direction.y)))
             return;
+        if(Math.abs(newDir.x) > 1 || Math.abs(newDir.y) > 1)
+            throw new Exception("Incorrect direction");
         direction = newDir;
     }
 

@@ -78,7 +78,7 @@ public class ModelTests {
         }
 
         @Test
-        public void testMoveWithChangingDirection() {
+        public void testMoveWithChangingDirection() throws Exception {
             Point prevPoint = snake.getHead();
             Point startingDirection = snake.getDirection();
 
@@ -157,7 +157,7 @@ public class ModelTests {
         }
 
         @Test
-        public void test_reverse_direction_Down() {
+        public void test_reverse_direction_Down() throws Exception {
             gameBoard.snakes[0] = new Snake(5,5,Direction.Down,3,0);
             snake = gameBoard.snakes[0];
             Point originalDirection = snake.getDirection();
@@ -169,7 +169,7 @@ public class ModelTests {
         }
 
         @Test
-        public void test_reverse_direction_Up() {
+        public void test_reverse_direction_Up() throws Exception {
             gameBoard.snakes[0] = new Snake(5,5,Direction.Up,3,0);
             snake = gameBoard.snakes[0];
             Point originalDirection = snake.getDirection();
@@ -181,7 +181,7 @@ public class ModelTests {
         }
 
         @Test
-        public void test_reverse_direction_Right() {
+        public void test_reverse_direction_Right() throws Exception {
             gameBoard.snakes[0] = new Snake(5,5,Direction.Right,3,0);
             snake = gameBoard.snakes[0];
             Point originalDirection = snake.getDirection();
@@ -193,7 +193,7 @@ public class ModelTests {
         }
 
         @Test
-        public void test_reverse_direction_Left() {
+        public void test_reverse_direction_Left() throws Exception {
             gameBoard.snakes[0] = new Snake(5,5,Direction.Left,3,0);
             snake = gameBoard.snakes[0];
             Point originalDirection = snake.getDirection();
@@ -217,7 +217,7 @@ public class ModelTests {
         }
 
         @Test
-        public void testEatingItselfInInfinite() {
+        public void testEatingItselfInInfinite() throws Exception {
             gameBoard.snakes[0] = new Snake(10, 10, Direction.Down, 6,0);
             snake = gameBoard.snakes[0];
             snake.move();
@@ -302,7 +302,7 @@ public class ModelTests {
         }
 
         @Test
-        public void testOnlySecondSnakeChangeDirection(){
+        public void testOnlySecondSnakeChangeDirection() throws Exception {
             Point prevSnake1Dir = snake1.getDirection();
             Point prevSnake2Dir = snake2.getDirection();
             snake2.setDirection(Direction.Right);

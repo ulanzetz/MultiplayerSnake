@@ -7,17 +7,14 @@ import com.snakegame.model.Snake;
 import com.snakegame.server.Server;
 import org.junit.Assert;
 import org.junit.Before;
+
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
 import java.awt.*;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.InetSocketAddress;
+import java.net.*;
 
 import static org.junit.Assert.*;
 
@@ -30,12 +27,15 @@ public class MultiplayerTests {
         private Client client2;
         private DatagramSocket socket;
         private DatagramPacket packet;
+        private InetAddress ip;
 
         @Before
         public void testData() throws Exception {
             Server.main(new String[]{"9866", "20", "20", "40", "twosnakesinf"});
             client1 = new Client("127.0.0.1","9866");
             client2 = new Client("127.0.0.1", "9867");
+            socket = new DatagramSocket();
+            InetAddress ip = InetAddress.getByName("127.0.0.1");
         }
 
         @Test
@@ -53,7 +53,7 @@ public class MultiplayerTests {
         }
 
         @Test
-        public void testSecondSnakeNotMove() throws IOException {
+        public void testSecondSnakeNotMove() throws Exception {
             Snake[] clientSnakes = client1.getGame().board.snakes;
             clientSnakes[0].setDirection(Direction.Right);
             clientSnakes[1].setDirection(Direction.Right);
@@ -64,23 +64,32 @@ public class MultiplayerTests {
             assertEquals(serverSnakes[1].getDirection(), Direction.Down);
         }
 
-        @Test
-        public void testChangeDirectionOnBothSnakes() throws IOException {
-            Point prevHeadPos = client1.getGame().board.snakes[0].getHead();
-            Point dir = client1.getGame().board.snakes[0].getDirection();
+
+        @Test(expected = Exception.class)
+        public void testWrongDirectionFailure() throws Exception {
+            client1.getGame().board.snakes[0].setDirection(new Point(-100, -100));
             client1.infoChange();
-//            client1.infoChange();
-            assertEquals(new Point(prevHeadPos.x+2*dir.x,prevHeadPos.y + 2*dir.y),
-                            client1.getGame().board.snakes[0].getHead());
-
+            socket.setSoTimeout(1000);
+            byte[] receiveData = new byte[30];
+            packet = new DatagramPacket(receiveData, receiveData.length);
+            socket.receive(packet);
         }
 
-        @Test
-        public void testPacketLostTimeOut(){
-
+        @Test(expected = SocketTimeoutException.class)
+        public void testServerDownGameOver() throws IOException, InterruptedException {
+            Server.close();
+            client1.infoChange();
+            client1.infoChange();
         }
 
-        @Test
-        public void testWrongPacket(){}
+        @Test(expected = SocketTimeoutException.class)
+        public void testWrongPacket() throws IOException {
+            InetAddress ip = InetAddress.getByName("127.0.0.1");
+            socket = new DatagramSocket();
+            packet = new DatagramPacket("abcd".getBytes(), 4, ip, 9866);
+            socket.send(packet);
+            socket.setSoTimeout(1000);
+            socket.receive(packet);
+        }
     }
 }

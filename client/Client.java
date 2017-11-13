@@ -113,30 +113,25 @@ public class Client extends JFrame {
         byte[] receiveData = new byte[256];
         packet = new DatagramPacket(receiveData, receiveData.length);
         socket.setSoTimeout(1000);
-        try {
-            socket.receive(packet);
-            String args[] = new String(receiveData).split("'");
-            for (int i = 0; i != game.gameMode.snakeCount; ++i) {
-                String points[] = args[i].split(" ");
-                Snake snake = game.board.snakes[i];
-                ArrayList<Point> snPoints = new ArrayList<>();
-                for (int j = 0; j != points.length - 1; ++j) {
-                    String cords[] = points[j].split(",");
-                    int x = Integer.parseInt(cords[0]);
-                    int y = Integer.parseInt(cords[1]);
-                    snPoints.add(new Point(x, y));
-                }
-                snake.snakePoints = snPoints;
-                snake.score = Integer.parseInt(points[points.length - 1]);
+        socket.receive(packet);
+        String args[] = new String(receiveData).split("'");
+        for (int i = 0; i != game.gameMode.snakeCount; ++i) {
+            String points[] = args[i].split(" ");
+            Snake snake = game.board.snakes[i];
+            ArrayList<Point> snPoints = new ArrayList<>();
+            for (int j = 0; j != points.length - 1; ++j) {
+                String cords[] = points[j].split(",");
+                int x = Integer.parseInt(cords[0]);
+                int y = Integer.parseInt(cords[1]);
+                snPoints.add(new Point(x, y));
             }
-            String fruitCords[] = args[game.gameMode.snakeCount].split(",");
-            int x = Integer.parseInt(fruitCords[0]);
-            int y = Integer.parseInt(fruitCords[1]);
-            game.board.fruitPos = new Point(x, y);
+            snake.snakePoints = snPoints;
+            snake.score = Integer.parseInt(points[points.length - 1]);
         }
-        catch (SocketTimeoutException e) {
-            e.printStackTrace();
-        }
+        String fruitCords[] = args[game.gameMode.snakeCount].split(",");
+        int x = Integer.parseInt(fruitCords[0]);
+        int y = Integer.parseInt(fruitCords[1]);
+        game.board.fruitPos = new Point(x, y);
     }
 
     public static void main(String[] args) {
