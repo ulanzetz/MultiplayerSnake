@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
+import java.awt.*;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -39,7 +40,6 @@ public class MultiplayerTests {
 
         @Test
         public void testThirdConnection() throws Exception {
-
             InetAddress ip = InetAddress.getByName("127.0.0.1");
             socket = new DatagramSocket( 13000);
             packet = new DatagramPacket("con".getBytes(), 3, ip, 9866);
@@ -53,14 +53,34 @@ public class MultiplayerTests {
         }
 
         @Test
-        public void testSecondSnakeMove() throws IOException {
+        public void testSecondSnakeNotMove() throws IOException {
             Snake[] clientSnakes = client1.getGame().board.snakes;
             clientSnakes[0].setDirection(Direction.Right);
             clientSnakes[1].setDirection(Direction.Right);
             client1.infoChange();
             Snake[] serverSnakes = Server.getGame().board.snakes;
+
             assertEquals(serverSnakes[0].getDirection(), Direction.Right);
             assertEquals(serverSnakes[1].getDirection(), Direction.Down);
         }
+
+        @Test
+        public void testChangeDirectionOnBothSnakes() throws IOException {
+            Point prevHeadPos = client1.getGame().board.snakes[0].getHead();
+            Point dir = client1.getGame().board.snakes[0].getDirection();
+            client1.infoChange();
+//            client1.infoChange();
+            assertEquals(new Point(prevHeadPos.x+2*dir.x,prevHeadPos.y + 2*dir.y),
+                            client1.getGame().board.snakes[0].getHead());
+
+        }
+
+        @Test
+        public void testPacketLostTimeOut(){
+
+        }
+
+        @Test
+        public void testWrongPacket(){}
     }
 }
