@@ -30,7 +30,7 @@ public class Game implements ActionListener, Serializable {
     @Override
     public void actionPerformed(ActionEvent e) {
         if(panel != null) {
-            if(client != null) {
+            if(client != null && !client.debugMode) {
                 try {
                     client.infoChange();
                 } catch (IOException e1) {

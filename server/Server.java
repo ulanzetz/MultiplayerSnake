@@ -14,6 +14,7 @@ import static java.lang.Integer.getInteger;
 import static java.lang.Integer.parseInt;
 
 public class Server {
+    private static Game game;
 
     public static void main(String args[]) throws Exception {
         int serverStartPort = parseInt(args[0]);
@@ -24,7 +25,7 @@ public class Server {
         int delay = parseInt(args[3]);
         GameMode.loadGameMods();
         GameMode mode = GameMode.gameMods.get(args[4]);
-        Game game = new Game(width, height, delay, mode, null, null);
+        game = new Game(width, height, delay, mode, null, null);
 
         for(int i = 0; i != game.gameMode.snakeCount; ++i) {
             DatagramSocket socket = new DatagramSocket(serverStartPort + i);
@@ -32,6 +33,9 @@ public class Server {
         }
     }
 
+    public static Game getGame() {
+        return game;
+    }
 }
 class Responder implements Runnable {
     private DatagramSocket socket = null;
@@ -101,7 +105,6 @@ class Responder implements Runnable {
                 e.printStackTrace();
             }
         }
-
     }
 
 }
