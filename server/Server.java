@@ -16,6 +16,8 @@ import static java.lang.Integer.parseInt;
 public class Server {
     private static Game game;
 
+    private static Game game;
+
     public static void main(String args[]) throws Exception {
         int serverStartPort = parseInt(args[0]);
         int width = parseInt(args[1]);
