@@ -70,7 +70,6 @@ public class MultiplayerTests {
             Point dir = client1.getGame().board.snakes[0].getDirection();
             client1.infoChange();
 //            client1.infoChange();
-            //123
             assertEquals(new Point(prevHeadPos.x+2*dir.x,prevHeadPos.y + 2*dir.y),
                             client1.getGame().board.snakes[0].getHead());
 
