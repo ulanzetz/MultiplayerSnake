@@ -20,6 +20,7 @@ public class Client extends JFrame {
     private DatagramPacket packet;
     private InetAddress ip;
     private int port;
+    public boolean debugMode = false;
 
     public Client()  {
         setTitle("Choose settings");
@@ -67,6 +68,7 @@ public class Client extends JFrame {
 
     public Client(String ipString, String portString) {
         try {
+            debugMode = true;
             initializeClient(ipString, portString, false);
         } catch (IOException e) {
             e.printStackTrace();
@@ -90,15 +92,16 @@ public class Client extends JFrame {
         id = Integer.parseInt(args[3]);
         GameMode.loadGameMods();
         GameMode mode = GameMode.gameMods.get(args[4]);
+        Panel panel1 = new Panel(width, height, delay, mode, this);
+        game = panel1.game;
+
         if(useGui) {
             GameForm form = new GameForm();
             form.setSize(width * 30 + 20, height * 30 + 30);
             JFrameExtentions.SetLocationToCenter(form);
-            Panel panel1 = new Panel(width, height, delay, mode, this);
             form.add(panel1);
             setVisible(false);
             dispose();
-            game = panel1.game;
         }
     }
 

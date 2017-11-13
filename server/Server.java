@@ -14,6 +14,7 @@ import static java.lang.Integer.getInteger;
 import static java.lang.Integer.parseInt;
 
 public class Server {
+    private static Game game;
 
     private static Game game;
 
@@ -106,7 +107,6 @@ class Responder implements Runnable {
                 e.printStackTrace();
             }
         }
-
     }
 
 }
