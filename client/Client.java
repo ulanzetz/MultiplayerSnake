@@ -10,10 +10,7 @@ import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketTimeoutException;
+import java.net.*;
 import java.util.ArrayList;
 
 public class Client extends JFrame {
@@ -24,7 +21,7 @@ public class Client extends JFrame {
     private InetAddress ip;
     private int port;
 
-    public Client() {
+    public Client()  {
         setTitle("Choose settings");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(300, 300);
@@ -61,36 +58,48 @@ public class Client extends JFrame {
 
         startButton.addActionListener(e -> {
             try {
-                ip = InetAddress.getByName(ipBox.getText());
-                port = Integer.parseInt(serverPortBox.getText());
-                socket = new DatagramSocket();
-                packet = new DatagramPacket("con".getBytes(), 3, ip, port);
-                socket.send(packet);
-                byte[] receiveData = new byte[30];
-                packet = new DatagramPacket(receiveData, receiveData.length);
-                socket.receive(packet);
-                String answer = new String(receiveData);
-                String args[] = answer.split(" ");
-                int width = Integer.parseInt(args[0]);
-                int height = Integer.parseInt(args[1]);
-                int delay = Integer.parseInt(args[2]);
-                id = Integer.parseInt(args[3]);
-                GameMode.loadGameMods();
-                GameMode mode = GameMode.gameMods.get(args[4]);
-                GameForm form = new GameForm();
-                form.setSize(width * 30 + 20, height * 30 + 30);
-                JFrameExtentions.SetLocationToCenter(form);
-
-                Panel panel1 = new Panel(width, height, delay, mode, this);
-                form.add(panel1);
-                setVisible(false);
-                dispose();
-                game = panel1.game;
-
-            } catch (Exception exp) {
+                initializeClient(ipBox.getText(), serverPortBox.getText(), true);
+            } catch (IOException e1) {
                 JFrameExtentions.infoBox("Incorrect format of data", "Error");
             }
         });
+    }
+
+    public Client(String ipString, String portString) {
+        try {
+            initializeClient(ipString, portString, false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void initializeClient(String ipString, String portString, boolean useGui) throws IOException {
+        ip = InetAddress.getByName(ipString);
+        port = Integer.parseInt(portString);
+        socket = new DatagramSocket();
+        packet = new DatagramPacket("con".getBytes(), 3, ip, port);
+        socket.send(packet);
+        byte[] receiveData = new byte[30];
+        packet = new DatagramPacket(receiveData, receiveData.length);
+        socket.receive(packet);
+        String answer = new String(receiveData);
+        String args[] = answer.split(" ");
+        int width = Integer.parseInt(args[0]);
+        int height = Integer.parseInt(args[1]);
+        int delay = Integer.parseInt(args[2]);
+        id = Integer.parseInt(args[3]);
+        GameMode.loadGameMods();
+        GameMode mode = GameMode.gameMods.get(args[4]);
+        if(useGui) {
+            GameForm form = new GameForm();
+            form.setSize(width * 30 + 20, height * 30 + 30);
+            JFrameExtentions.SetLocationToCenter(form);
+            Panel panel1 = new Panel(width, height, delay, mode, this);
+            form.add(panel1);
+            setVisible(false);
+            dispose();
+            game = panel1.game;
+        }
     }
 
     public void infoChange() throws IOException {

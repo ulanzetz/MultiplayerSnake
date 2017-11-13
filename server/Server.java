@@ -41,8 +41,8 @@ public class Server {
 class Responder implements Runnable {
     private DatagramSocket socket = null;
     private Game game;
-    private static HashMap<String, Integer> playersIDs = new HashMap<>();
     private static int connectedPlayers = 0;
+    private static HashMap<String, Integer> playersIDs = new HashMap<>();
     private String modeName;
     private int playerID;
 
@@ -81,18 +81,23 @@ class Responder implements Runnable {
                 }
             }
             else {
-                String[] splitedData = data.split(" ");
-                int x = parseInt(splitedData[0]);
-                int y = parseInt(splitedData[1]);
-                game.board.snakes[playerID].setDirection(new Point(x, y));
-                String mes = "";
-                for(int i = 0; i != game.gameMode.snakeCount; ++i) {
-                    for(Point p: game.board.snakes[i].snakePoints)
-                        mes += p.x + "," + p.y + ' ';
-                    mes += game.board.snakes[i].score + "'";
+                try {
+                    String[] splitedData = data.split(" ");
+                    int x = parseInt(splitedData[0]);
+                    int y = parseInt(splitedData[1]);
+                    game.board.snakes[playerID].setDirection(new Point(x, y));
+                    String mes = "";
+                    for (int i = 0; i != game.gameMode.snakeCount; ++i) {
+                        for (Point p : game.board.snakes[i].snakePoints)
+                            mes += p.x + "," + p.y + ' ';
+                        mes += game.board.snakes[i].score + "'";
+                    }
+                    mes += game.board.fruitPos.x + "," + game.board.fruitPos.y + "'";
+                    sendData = mes.getBytes();
                 }
-                mes += game.board.fruitPos.x + "," + game.board.fruitPos.y + "'";
-                sendData = mes.getBytes();
+                catch (Exception e) {
+                    continue;
+                }
             }
             packet = new DatagramPacket(sendData, sendData.length, ip, clientPort);
             try {
