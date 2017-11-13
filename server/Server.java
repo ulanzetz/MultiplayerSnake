@@ -37,7 +37,7 @@ class Responder implements Runnable {
     private DatagramSocket socket = null;
     private Game game;
     private static HashMap<String, Integer> playersIDs = new HashMap<>();
-    private int connectedPlayers = 0;
+    private static int connectedPlayers = 0;
     private String modeName;
     private int playerID;
 
