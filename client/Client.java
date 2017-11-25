@@ -17,11 +17,12 @@ import java.util.ArrayList;
 
 public class Client extends JFrame {
     private int id;
-    private Game game;
+    public Game game;
     private DatagramSocket socket;
     private DatagramPacket packet;
     private InetAddress ip;
     private int port;
+    private int connectPort;
     public boolean debugMode = false;
 
     public Client()  {
@@ -80,10 +81,11 @@ public class Client extends JFrame {
     private void initializeClient(String ipString, String portString, boolean useGui) throws IOException {
         ip = InetAddress.getByName(ipString);
         port = Integer.parseInt(portString);
+        connectPort = port;
         socket = new DatagramSocket();
         packet = new DatagramPacket("con".getBytes(), 3, ip, port);
         socket.send(packet);
-        byte[] receiveData = new byte[30];
+        byte[] receiveData = new byte[32];
         packet = new DatagramPacket(receiveData, receiveData.length);
         socket.receive(packet);
         String answer = new String(receiveData);
@@ -94,9 +96,9 @@ public class Client extends JFrame {
         id = Integer.parseInt(args[3]);
         port += 1 + id;
         GameMode.loadGameMods();
+        Fruit.loadFruits();
         GameMode mode = GameMode.gameMods.get(args[4]);
         Panel panel1 = new Panel(width, height, delay, mode, this);
-        game = panel1.game;
 
         if(useGui) {
             GameForm form = new GameForm();
@@ -120,7 +122,7 @@ public class Client extends JFrame {
     }
 
     public void infoChange() throws IOException {
-        Point dir = game.board.snakes[id].getDirection();
+        Point dir = game.board.snakes.size() > 0 ? game.board.snakes.get(id).getDirection() : Direction.Down;
         byte[] mes = (dir.x + " " + dir.y + " ").getBytes();
         packet = new DatagramPacket(mes, mes.length, ip, port);
         socket.send(packet);
@@ -128,10 +130,14 @@ public class Client extends JFrame {
         packet = new DatagramPacket(receiveData, receiveData.length);
         socket.setSoTimeout(1000);
         socket.receive(packet);
-        String args[] = new String(receiveData).split("'");
-        for (int i = 0; i != game.gameMode.snakeCount; ++i) {
+        String data[] = new String(receiveData).split("&");
+        int snakeCount = Integer.parseInt(data[0]);
+        String args[] = data[1].split("'");
+        for (int i = 0; i != snakeCount; ++i) {
             String points[] = args[i].split(" ");
-            Snake snake = game.board.snakes[i];
+            if(i >= game.board.snakes.size())
+                game.board.snakes.add(new Snake(3, i));
+            Snake snake = game.board.snakes.get(i);
             ArrayList<Point> snPoints = new ArrayList<>();
             for (int j = 0; j != points.length - 1; ++j) {
                 String cords[] = points[j].split(",");
@@ -142,14 +148,15 @@ public class Client extends JFrame {
             snake.snakePoints = snPoints;
             snake.score = Integer.parseInt(points[points.length - 1]);
         }
-        String fruitCords[] = args[game.gameMode.snakeCount].split(",");
+        String fruitCords[] = args[snakeCount].split(",");
         int x = Integer.parseInt(fruitCords[0]);
         int y = Integer.parseInt(fruitCords[1]);
         game.board.fruitPos = new Point(x, y);
+        game.board.fruit = Fruit.fruits.get(fruitCords[2]);
     }
 
     public void close() throws IOException {
-        socket.send(new DatagramPacket("dis".getBytes(), 3, ip, port));
+        socket.send(new DatagramPacket("dis".getBytes(), 3, ip, connectPort));
     }
 
     public static void main(String[] args) {

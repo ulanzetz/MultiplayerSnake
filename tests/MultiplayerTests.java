@@ -54,11 +54,11 @@ public class MultiplayerTests {
 
         @Test
         public void testSecondSnakeNotMove() throws Exception {
-            Snake[] clientSnakes = client1.getGame().board.snakes;
+            Snake[] clientSnakes = (Snake[]) client1.getGame().board.snakes.toArray();
             clientSnakes[0].setDirection(Direction.Right);
             clientSnakes[1].setDirection(Direction.Right);
             client1.infoChange();
-            Snake[] serverSnakes = Server.game.board.snakes;
+            Snake[] serverSnakes = (Snake[]) Server.game.board.snakes.toArray();
 
             assertEquals(serverSnakes[0].getDirection(), Direction.Right);
             assertEquals(serverSnakes[1].getDirection(), Direction.Down);
@@ -67,7 +67,7 @@ public class MultiplayerTests {
 
         @Test(expected = Exception.class)
         public void testWrongDirectionFailure() throws Exception {
-            client1.getGame().board.snakes[0].setDirection(new Point(-100, -100));
+            client1.getGame().board.snakes.get(0).setDirection(new Point(-100, -100));
             client1.infoChange();
             socket.setSoTimeout(1000);
             byte[] receiveData = new byte[30];

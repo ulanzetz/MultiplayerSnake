@@ -21,7 +21,7 @@ public class ModelTests {
         public void testData() {
             GameMode.loadGameMods();
             gameBoard = new Board(10, 10, 2, GameMode.gameMods.get("classic"));
-            snake = gameBoard.snakes[0];
+            snake = gameBoard.snakes.get(0);
         }
 
         @Test
@@ -34,7 +34,7 @@ public class ModelTests {
             assertEquals(width, 10);
             assertEquals(height, 11);
             assertEquals(anotherGameBoard.score, 0);
-            assertEquals(anotherGameBoard.snakes[0].snakePoints.size(), 3);
+            assertEquals(anotherGameBoard.snakes.get(0).snakePoints.size(), 3);
         }
 
         @Test(expected = IllegalArgumentException.class)
@@ -93,8 +93,8 @@ public class ModelTests {
 
         @Test
         public void testHitInWallGameOver() {
-            gameBoard.snakes[0] = new Snake(0, 0, Direction.Left, 3, 0);
-            Snake snake = gameBoard.snakes[0];
+            gameBoard.snakes.set(0, new Snake(0, 0, Direction.Left, 3, 0));
+            Snake snake = gameBoard.snakes.get(0);
 
             snake.move();
             gameBoard.checkCollisions();
@@ -131,13 +131,13 @@ public class ModelTests {
 
         @Test
         public void testEatingItselfGameOver() {
-            gameBoard.snakes[0] = new Snake(Direction.Left,0,
-                    new Point(5,5),
-                    new Point(5,4),
-                    new Point(4,4),
-                    new Point(4,5),
-                    new Point(4,6));
-            Snake snake = gameBoard.snakes[0];
+            gameBoard.snakes.set(0, new Snake(Direction.Left, 0,
+                    new Point(5, 5),
+                    new Point(5, 4),
+                    new Point(4, 4),
+                    new Point(4, 5),
+                    new Point(4, 6)));
+            Snake snake = gameBoard.snakes.get(0);
 
             snake.move();
             gameBoard.checkCollisions();
@@ -158,50 +158,50 @@ public class ModelTests {
 
         @Test
         public void test_reverse_direction_Down() throws Exception {
-            gameBoard.snakes[0] = new Snake(5,5,Direction.Down,3,0);
-            snake = gameBoard.snakes[0];
+            gameBoard.snakes.set(0, new Snake(5, 5, Direction.Down, 3, 0));
+            snake = gameBoard.snakes.get(0);
             Point originalDirection = snake.getDirection();
 
             gameBoard.checkCollisions();
             snake.setDirection(Direction.Up);
 
-            assertEquals("The course should not change on the opposite", originalDirection, gameBoard.snakes[0].getDirection());
+            assertEquals("The course should not change on the opposite", originalDirection, gameBoard.snakes.get(0).getDirection());
         }
 
         @Test
         public void test_reverse_direction_Up() throws Exception {
-            gameBoard.snakes[0] = new Snake(5,5,Direction.Up,3,0);
-            snake = gameBoard.snakes[0];
+            gameBoard.snakes.set(0, new Snake(5, 5, Direction.Up, 3, 0));
+            snake = gameBoard.snakes.get(0);
             Point originalDirection = snake.getDirection();
 
             gameBoard.checkCollisions();
             snake.setDirection(Direction.Down);
 
-            assertEquals("The course should not change on the opposite", originalDirection, gameBoard.snakes[0].getDirection());
+            assertEquals("The course should not change on the opposite", originalDirection, gameBoard.snakes.get(0).getDirection());
         }
 
         @Test
         public void test_reverse_direction_Right() throws Exception {
-            gameBoard.snakes[0] = new Snake(5,5,Direction.Right,3,0);
-            snake = gameBoard.snakes[0];
+            gameBoard.snakes.set(0, new Snake(5, 5, Direction.Right, 3, 0));
+            snake = gameBoard.snakes.get(0);
             Point originalDirection = snake.getDirection();
 
             gameBoard.checkCollisions();
             snake.setDirection(Direction.Left);
 
-            assertEquals("The course should not change on the opposite", originalDirection, gameBoard.snakes[0].getDirection());
+            assertEquals("The course should not change on the opposite", originalDirection, gameBoard.snakes.get(0).getDirection());
         }
 
         @Test
         public void test_reverse_direction_Left() throws Exception {
-            gameBoard.snakes[0] = new Snake(5,5,Direction.Left,3,0);
-            snake = gameBoard.snakes[0];
+            gameBoard.snakes.set(0, new Snake(5, 5, Direction.Left, 3, 0));
+            snake = gameBoard.snakes.get(0);
             Point originalDirection = snake.getDirection();
 
             gameBoard.checkCollisions();
             snake.setDirection(Direction.Right);
 
-            assertEquals("The course should not change on the opposite", originalDirection, gameBoard.snakes[0].getDirection());
+            assertEquals("The course should not change on the opposite", originalDirection, gameBoard.snakes.get(0).getDirection());
         }
     }
 
@@ -213,13 +213,13 @@ public class ModelTests {
         public void testData() {
             GameMode.loadGameMods();
             gameBoard = new Board(20, 20, 6, GameMode.gameMods.get("infinite"));
-            snake = gameBoard.snakes[0];
+            snake = gameBoard.snakes.get(0);
         }
 
         @Test
         public void testEatingItselfInInfinite() throws Exception {
-            gameBoard.snakes[0] = new Snake(10, 10, Direction.Down, 6,0);
-            snake = gameBoard.snakes[0];
+            gameBoard.snakes.set(0, new Snake(10, 10, Direction.Down, 6, 0));
+            snake = gameBoard.snakes.get(0);
             snake.move();
             snake.setDirection(Direction.Right);
             snake.move();
@@ -249,15 +249,15 @@ public class ModelTests {
 
         @Test
         public void testHitInWallInInfiniteLeadToSnakeRespawn() {
-            gameBoard.snakes[0] = new Snake(gameBoard.getWidth() - 1,gameBoard.getHeight() - 1, Direction.Right, 7,0);
-            snake = gameBoard.snakes[0];
+            gameBoard.snakes.set(0, new Snake(gameBoard.getWidth() - 1, gameBoard.getHeight() - 1, Direction.Right, 7, 0));
+            snake = gameBoard.snakes.get(0);
             Point prevHead = snake.getHead();
             int prevSnakeSize = snake.snakePoints.size();
             snake.move();
             gameBoard.checkCollisions();
-            int currentSnakeSize = gameBoard.snakes[0].snakePoints.size();
+            int currentSnakeSize = gameBoard.snakes.get(0).snakePoints.size();
 
-            assertNotEquals(prevHead, gameBoard.snakes[0].getHead());
+            assertNotEquals(prevHead, gameBoard.snakes.get(0).getHead());
             assertTrue(currentSnakeSize < prevSnakeSize);
             assertEquals(false, gameBoard.finished);
         }
@@ -272,8 +272,8 @@ public class ModelTests {
          public void testData(){
             GameMode.loadGameMods();
             gameBoard = new Board(20,20, 3, GameMode.gameMods.get("twosnakesinf"));
-            snake1 = gameBoard.snakes[0];
-            snake2 = gameBoard.snakes[1];
+            snake1 = gameBoard.snakes.get(0);
+            snake2 = gameBoard.snakes.get(1);
         }
 
         @Test
@@ -297,8 +297,8 @@ public class ModelTests {
             gameBoard.checkCollisions();
 
             assertNotEquals(oldFruit, gameBoard.getFruitPos() );
-            assertEquals(gameBoard.snakes[0].snakePoints.size(), prevSnake1size);
-            assertNotEquals(prevSnake2size, gameBoard.snakes[1].snakePoints.size());
+            assertEquals(gameBoard.snakes.get(0).snakePoints.size(), prevSnake1size);
+            assertNotEquals(prevSnake2size, gameBoard.snakes.get(1).snakePoints.size());
         }
 
         @Test

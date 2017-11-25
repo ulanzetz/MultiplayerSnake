@@ -2,6 +2,7 @@ package com.snakegame.server;
 
 import com.snakegame.model.Game;
 import com.snakegame.model.GameMode;
+import com.snakegame.model.Snake;
 
 import java.awt.*;
 import java.io.IOException;
@@ -83,18 +84,21 @@ class ConnectSocket implements Runnable {
                     sendData = "not".getBytes();
                 else {
                     if(!Server.playersIDs.containsKey(ipPort))
-                        Server.playersIDs.put(ipPort, Server.connectedPlayers++);
+                        Server.playersIDs.put(ipPort, Server.connectedPlayers);
                     sendData = (game.board.getWidth() + " " +
                             game.board.getHeight() + " " +
                             game.delay  + " " +
                             Server.playersIDs.get(ipPort) + " " +
                             modeName + " ").getBytes();
                     try {
-                        DatagramSocket playerSocket = new DatagramSocket(Server.serverStartPort + Server.connectedPlayers);
-                        Thread thread = new Thread(new Responder(playerSocket, Server.connectedPlayers - 1));
+                        if(gameMode.supportAddingPlayers)
+                            game.board.snakes.add(new Snake(3, Server.connectedPlayers));
+                        DatagramSocket playerSocket = new DatagramSocket(Server.serverStartPort + Server.connectedPlayers + 1);
+                        Thread thread = new Thread(new Responder(playerSocket, Server.connectedPlayers));
                         thread.start();
                         Server.playerThreads.add(thread);
                         Server.playerSockets.add(playerSocket);
+                        Server.connectedPlayers++;
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -158,14 +162,14 @@ class Responder implements Runnable {
                 String[] splitedData = data.split(" ");
                 int x = parseInt(splitedData[0]);
                 int y = parseInt(splitedData[1]);
-                game.board.snakes[playerID].setDirection(new Point(x, y));
-                String mes = "";
-                for (int i = 0; i != game.gameMode.snakeCount; ++i) {
-                    for (Point p : game.board.snakes[i].snakePoints)
+                game.board.snakes.get(playerID).setDirection(new Point(x, y));
+                String mes = game.board.snakes.size() + "&";
+                for (int i = 0; i != game.board.snakes.size(); ++i) {
+                    for (Point p : game.board.snakes.get(i).snakePoints)
                         mes += p.x + "," + p.y + ' ';
-                    mes += game.board.snakes[i].score + "'";
+                    mes += game.board.snakes.get(i).score + "'";
                 }
-                mes += game.board.fruitPos.x + "," + game.board.fruitPos.y + "'";
+                mes += game.board.fruitPos.x + "," + game.board.fruitPos.y + "," + game.board.fruit.name +"'";
                 sendData = mes.getBytes();
             }
             catch (Exception e) {

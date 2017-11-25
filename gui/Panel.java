@@ -2,6 +2,7 @@ package com.snakegame.gui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.HashMap;
 import javax.swing.*;
 import javax.swing.plaf.synth.ColorType;
@@ -23,18 +24,22 @@ public class Panel extends JPanel  {
                     {KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT, KeyEvent.VK_UP, KeyEvent.VK_DOWN}
             };
 
-    public Panel(int w, int h, int del, GameMode mode, Client client) {
+    public Panel(int w, int h, int del, GameMode mode, Client client) throws IOException {
         setBackground(Color.black);
         setFocusable(true);
         addKeyListener(new TAdapter());
-        scoreLabels = new JLabel[mode.snakeCount];
-        for(int i = 0; i != mode.snakeCount; ++i) {
+        scoreLabels = new JLabel[mode.maxPlayers];
+        for(int i = 0; i != mode.maxPlayers; ++i) {
             scoreLabels[i] = new JLabel("Score: ");
             scoreLabels[i].setForeground(snakeColors[i]);
             scoreLabels[i].setLocation(300, 300 + i * 30);
             add(scoreLabels[i]);
         }
         game = new Game(w, h, del, mode, this, client);
+        if(client != null) {
+            client.game = game;
+            client.infoChange();
+        }
         LoadImages();
     }
 
@@ -71,8 +76,8 @@ public class Panel extends JPanel  {
         Board board = game.board;
         if(board.finished) {
             String infoMes = "Game finised!\n";
-            for(int i = 0; i != board.snakes.length; ++i) {
-                infoMes += "Player " + i + ". Score: " + board.snakes[i].score;
+            for(int i = 0; i != board.snakes.size(); ++i) {
+                infoMes += "Player " + i + ". Score: " + board.snakes.get(i).score;
                 if(board.loserNum == i) infoMes += ". Loser";
                 infoMes += "\n";
             }
@@ -94,7 +99,7 @@ public class Panel extends JPanel  {
                 for(int j = 0; j != 4; ++j)
                     if(playersControls[0][j] == key) {
                         try {
-                            board.snakes[id].setDirection(Direction.getDirection(j));
+                            board.snakes.get(id).setDirection(Direction.getDirection(j));
                         } catch (Exception e1) {
                             e1.printStackTrace();
                         }
@@ -105,7 +110,7 @@ public class Panel extends JPanel  {
                 for(int j = 0; j != 4; ++j)
                     if(playersControls[i][j] == key) {
                         try {
-                            board.snakes[i].setDirection(Direction.getDirection(j));
+                            board.snakes.get(i).setDirection(Direction.getDirection(j));
 
                         } catch (Exception e1) {
                             e1.printStackTrace();

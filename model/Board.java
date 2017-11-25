@@ -13,7 +13,7 @@ public class Board implements Serializable{
     public Point fruitPos;
     public Fruit fruit;
     private GameMode gameMode;
-    public Snake[] snakes;
+    public ArrayList<Snake> snakes;
     public boolean finished;
     public int score;
     public int loserNum;
@@ -23,11 +23,11 @@ public class Board implements Serializable{
         height = h;
         snakeStartSize = snakeSize;
         loserNum = -1;
-        snakes = new Snake[mode.snakeCount];
+        snakes = new ArrayList<>(mode.snakeCount);
         for (int i = 0; i != mode.snakeCount; ++i)
-            snakes[i] = new Snake(snakeSize, i);
+            snakes.add(new Snake(snakeSize, i));
         for(int i = mode.snakeCount - mode.botCounts; i != mode.snakeCount; ++i)
-            snakes[i].bot = true;
+            snakes.get(i).bot = true;
         gameMode = mode;
         dropFruit();
     }
@@ -46,17 +46,17 @@ public class Board implements Serializable{
     }
 
     public void checkCollisions() {
-        for(int i = 0; i != gameMode.snakeCount; ++i)
+        for(int i = 0; i != snakes.size(); ++i)
             checkCollision(i);
     }
 
     public void moveSnakes() {
-        for(int i = 0; i != gameMode.snakeCount; ++i)
-            snakes[i].move(fruitPos);
+        for(int i = 0; i != snakes.size(); ++i)
+            snakes.get(i).move(fruitPos);
     }
 
     private void checkCollision(int snakeNumber) {
-        Snake snake = snakes[snakeNumber];
+        Snake snake = snakes.get(snakeNumber);
         Point head = snake.getHead();
         if(head.equals(fruitPos)) {
             int points = fruit.givenScore;
@@ -72,12 +72,12 @@ public class Board implements Serializable{
                 finished = true;
                 return;
             }
-            snakes[snakeNumber] = new Snake(snakeStartSize, snake.number, snakes[snakeNumber].score);
+            snakes.set(snakeNumber, new Snake(snakeStartSize, snake.number, snakes.get(snakeNumber).score));
         }
         int size = snake.snakePoints.size();
         for(int i = 0; i != gameMode.snakeCount; ++i)
-            for(int j = 0; j != snakes[i].getSize(); ++j) {
-                if(head.equals(snakes[i].snakePoints.get(j))) {
+            for(int j = 0; j != snakes.get(i).getSize(); ++j) {
+                if(head.equals(snakes.get(i).snakePoints.get(j))) {
                     if(j == 0 && i == snakeNumber) continue;
                     if(i == snakeNumber){
                         if (!gameMode.infMode) {
@@ -104,8 +104,8 @@ public class Board implements Serializable{
         List<Point> emptyPoints = allPoints.stream()
                 .filter(i ->
                         {
-                            for(int j = 0; j != gameMode.snakeCount; ++j)
-                                if(snakes[j].snakePoints.contains(i))
+                            for(int j = 0; j != snakes.size(); ++j)
+                                if(snakes.get(j).snakePoints.contains(i))
                                     return false;
                             return true;
                         })
