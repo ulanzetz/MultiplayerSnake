@@ -58,7 +58,7 @@ public class MultiplayerTests {
             clientSnakes[0].setDirection(Direction.Right);
             clientSnakes[1].setDirection(Direction.Right);
             client1.infoChange();
-            Snake[] serverSnakes = Server.getGame().board.snakes;
+            Snake[] serverSnakes = Server.game.board.snakes;
 
             assertEquals(serverSnakes[0].getDirection(), Direction.Right);
             assertEquals(serverSnakes[1].getDirection(), Direction.Down);

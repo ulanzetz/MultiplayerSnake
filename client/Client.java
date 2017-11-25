@@ -7,6 +7,8 @@ import com.snakegame.model.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -90,6 +92,7 @@ public class Client extends JFrame {
         int height = Integer.parseInt(args[1]);
         int delay = Integer.parseInt(args[2]);
         id = Integer.parseInt(args[3]);
+        port += 1 + id;
         GameMode.loadGameMods();
         GameMode mode = GameMode.gameMods.get(args[4]);
         Panel panel1 = new Panel(width, height, delay, mode, this);
@@ -100,6 +103,17 @@ public class Client extends JFrame {
             form.setSize(width * 30 + 20, height * 30 + 30);
             JFrameExtentions.SetLocationToCenter(form);
             form.add(panel1);
+            form.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    try {
+                        close();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    super.windowClosing(e);
+                }
+            });
             setVisible(false);
             dispose();
         }
@@ -132,6 +146,10 @@ public class Client extends JFrame {
         int x = Integer.parseInt(fruitCords[0]);
         int y = Integer.parseInt(fruitCords[1]);
         game.board.fruitPos = new Point(x, y);
+    }
+
+    public void close() throws IOException {
+        socket.send(new DatagramPacket("dis".getBytes(), 3, ip, port));
     }
 
     public static void main(String[] args) {
