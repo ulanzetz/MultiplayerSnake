@@ -130,9 +130,13 @@ class ConnectSocket implements Runnable {
                     playerSocket.close();
                     game.board.snakes.remove(playerID);
                     sendData = "ok".getBytes();
-                    for(Integer i: snakeNumberByID.keySet())
-                        if(i > playerID)
-                            snakeNumberByID.put(i, snakeNumberByID.get(i) - 1);
+                    for(Integer i: snakeNumberByID.keySet()) {
+                        if(i > playerID) {
+                            int snakeNumber = snakeNumberByID.get(i);
+                            snakeNumberByID.put(i,  snakeNumber- 1);
+                            game.board.snakes.get(snakeNumber).number--;
+                        }
+                    }
                 }
                 else
                     sendData = "bad player".getBytes();
