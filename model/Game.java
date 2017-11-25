@@ -54,4 +54,8 @@ public class Game implements ActionListener, Serializable {
             }
         }
     }
+
+    public Client getClient() {
+        return client;
+    }
 }

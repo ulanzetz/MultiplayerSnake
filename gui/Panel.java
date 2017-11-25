@@ -87,14 +87,31 @@ public class Panel extends JPanel  {
             Board board = game.board;
             GameMode gameMode = game.gameMode;
             int key = e.getKeyCode();
-            for (int i = 0; i != gameMode.snakeCount; ++i)
+            Client client = game.getClient();
+            if(client != null)
+            {
+                int id = client.getId();
                 for(int j = 0; j != 4; ++j)
-                    if(playersControls[i][j] == key)
+                    if(playersControls[0][j] == key) {
                         try {
-                            board.snakes[i].setDirection(Direction.getDirection(j));
+                            board.snakes[id].setDirection(Direction.getDirection(j));
                         } catch (Exception e1) {
                             e1.printStackTrace();
                         }
+                        return;
+                    }
+            }
+            for (int i = 0; i != gameMode.snakeCount; ++i)
+                for(int j = 0; j != 4; ++j)
+                    if(playersControls[i][j] == key) {
+                        try {
+                            board.snakes[i].setDirection(Direction.getDirection(j));
+
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                        }
+                        return;
+                    }
         }
     }
 }

@@ -141,4 +141,8 @@ public class Client extends JFrame {
     public Game getGame() {
         return game;
     }
+
+    public int getId() {
+        return id;
+    }
 }
