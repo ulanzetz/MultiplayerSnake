@@ -11,6 +11,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 import static java.lang.Integer.parseInt;
@@ -20,9 +21,10 @@ public class Server {
     public static Game game;
     public static int connectedPlayers = 0;
     public static HashMap<String, Integer> playersIDs = new HashMap<>();
-    public static ArrayList<Thread> playerThreads;
-    public static ArrayList<DatagramSocket> playerSockets;
+    public static ArrayList<Thread> playerThreads = new ArrayList<>();
+    public static ArrayList<DatagramSocket> playerSockets = new ArrayList<>();
     public static int serverStartPort;
+    public static ArrayList<Integer> freeIDs = new ArrayList<Integer>();
     private static Thread connectThread;
     private static DatagramSocket connectSocket;
 
@@ -83,18 +85,22 @@ class ConnectSocket implements Runnable {
                         (!gameMode.supportAddingPlayers && Server.connectedPlayers >= gameMode.snakeCount))
                     sendData = "not".getBytes();
                 else {
+                    int id = Server.connectedPlayers;
+                    if(Server.freeIDs.size() > 0) {
+                        id = Collections.min(Server.freeIDs);
+                    }
                     if(!Server.playersIDs.containsKey(ipPort))
-                        Server.playersIDs.put(ipPort, Server.connectedPlayers);
+                        Server.playersIDs.put(ipPort, id);
                     sendData = (game.board.getWidth() + " " +
                             game.board.getHeight() + " " +
                             game.delay  + " " +
-                            Server.playersIDs.get(ipPort) + " " +
+                            id + " " +
                             modeName + " ").getBytes();
                     try {
                         if(gameMode.supportAddingPlayers)
-                            game.board.snakes.add(new Snake(3, Server.connectedPlayers));
-                        DatagramSocket playerSocket = new DatagramSocket(Server.serverStartPort + Server.connectedPlayers + 1);
-                        Thread thread = new Thread(new Responder(playerSocket, Server.connectedPlayers));
+                            game.board.snakes.add(new Snake(3, id));
+                        DatagramSocket playerSocket = new DatagramSocket(Server.serverStartPort + id + 1);
+                        Thread thread = new Thread(new Responder(playerSocket, id));
                         Server.connectedPlayers++;
                         thread.start();
                         Server.playerThreads.add(thread);
@@ -107,6 +113,7 @@ class ConnectSocket implements Runnable {
             else if(data.startsWith("dis")) {
                 if(Server.playersIDs.containsKey(ipPort)) {
                     int playerID = Server.playersIDs.get(ipPort);
+                    Server.freeIDs.add(playerID);
                     Server.playersIDs.remove(playerID);
                     --Server.connectedPlayers;
                     Thread thread = Server.playerThreads.get(playerID);
