@@ -132,11 +132,14 @@ public class Client extends JFrame {
         socket.receive(packet);
         String data[] = new String(receiveData).split("&");
         int snakeCount = Integer.parseInt(data[0]);
+        if(snakeCount != game.board.snakes.size()) {
+            game.board.snakes = new ArrayList<Snake>(snakeCount);
+            for(int i = 0; i != snakeCount; ++i)
+                game.board.snakes.add(new Snake(3, i));
+        }
         String args[] = data[1].split("'");
         for (int i = 0; i != snakeCount; ++i) {
             String points[] = args[i].split(" ");
-            if(i >= game.board.snakes.size())
-                game.board.snakes.add(new Snake(3, i));
             Snake snake = game.board.snakes.get(i);
             ArrayList<Point> snPoints = new ArrayList<>();
             for (int j = 0; j != points.length - 1; ++j) {

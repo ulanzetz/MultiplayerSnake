@@ -95,10 +95,10 @@ class ConnectSocket implements Runnable {
                             game.board.snakes.add(new Snake(3, Server.connectedPlayers));
                         DatagramSocket playerSocket = new DatagramSocket(Server.serverStartPort + Server.connectedPlayers + 1);
                         Thread thread = new Thread(new Responder(playerSocket, Server.connectedPlayers));
+                        Server.connectedPlayers++;
                         thread.start();
                         Server.playerThreads.add(thread);
                         Server.playerSockets.add(playerSocket);
-                        Server.connectedPlayers++;
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -115,6 +115,7 @@ class ConnectSocket implements Runnable {
                     DatagramSocket playerSocket = Server.playerSockets.get(playerID);
                     Server.playerSockets.remove(playerID);
                     playerSocket.close();
+                    game.board.snakes.remove(playerID);
                     sendData = "ok".getBytes();
                 }
                 else
@@ -156,8 +157,8 @@ class Responder implements Runnable {
             InetAddress ip = packet.getAddress();
             int clientPort = packet.getPort();
             String ipPort = ip.toString() + ":" + clientPort;
-            if(Server.playersIDs.get(ipPort) != playerID)
-               continue;
+            //if(Server.playersIDs.get(ipPort) != playerID)
+            //   continue;
             try {
                 String[] splitedData = data.split(" ");
                 int x = parseInt(splitedData[0]);
