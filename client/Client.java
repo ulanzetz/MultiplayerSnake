@@ -24,6 +24,7 @@ public class Client extends JFrame {
     private int port;
     private int connectPort;
     public boolean debugMode = false;
+    private int snakeID;
 
     public Client()  {
         setTitle("Choose settings");
@@ -85,7 +86,7 @@ public class Client extends JFrame {
         socket = new DatagramSocket();
         packet = new DatagramPacket("con".getBytes(), 3, ip, port);
         socket.send(packet);
-        byte[] receiveData = new byte[32];
+        byte[] receiveData = new byte[50];
         packet = new DatagramPacket(receiveData, receiveData.length);
         socket.receive(packet);
         String answer = new String(receiveData);
@@ -98,6 +99,7 @@ public class Client extends JFrame {
         GameMode.loadGameMods();
         Fruit.loadFruits();
         GameMode mode = GameMode.gameMods.get(args[4]);
+        snakeID = Integer.parseInt(args[5]);
         Panel panel1 = new Panel(width, height, delay, mode, this);
 
         if(useGui) {
@@ -122,7 +124,7 @@ public class Client extends JFrame {
     }
 
     public void infoChange() throws IOException {
-        Point dir = game.board.snakes.size() > 0 ? game.board.snakes.get(id).getDirection() : Direction.Down;
+        Point dir = game.board.snakes.size() > 0 ? game.board.snakes.get(snakeID).getDirection() : Direction.Down;
         byte[] mes = (dir.x + " " + dir.y + " ").getBytes();
         packet = new DatagramPacket(mes, mes.length, ip, port);
         socket.send(packet);

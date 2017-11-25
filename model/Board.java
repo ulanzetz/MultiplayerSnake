@@ -75,7 +75,7 @@ public class Board implements Serializable{
             snakes.set(snakeNumber, new Snake(snakeStartSize, snake.number, snakes.get(snakeNumber).score));
         }
         int size = snake.snakePoints.size();
-        for(int i = 0; i != gameMode.snakeCount; ++i)
+        for(int i = 0; i != snakes.size(); ++i)
             for(int j = 0; j != snakes.get(i).getSize(); ++j) {
                 if(head.equals(snakes.get(i).snakePoints.get(j))) {
                     if(j == 0 && i == snakeNumber) continue;
