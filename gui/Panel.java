@@ -101,7 +101,7 @@ public class Panel extends JPanel  {
                         try {
                             board.snakes.get(id).setDirection(Direction.getDirection(j));
                         } catch (Exception e1) {
-                            e1.printStackTrace();
+                            continue;
                         }
                         return;
                     }
