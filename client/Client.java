@@ -124,6 +124,8 @@ public class Client extends JFrame {
     }
 
     public void infoChange() throws IOException {
+        while (game.board.snakes.size() > 0 && snakeID >= game.board.snakes.size())
+            snakeID--;
         Point dir = game.board.snakes.size() > 0 ? game.board.snakes.get(snakeID).getDirection() : Direction.Down;
         byte[] mes = (dir.x + " " + dir.y + " ").getBytes();
         packet = new DatagramPacket(mes, mes.length, ip, port);
@@ -173,6 +175,6 @@ public class Client extends JFrame {
     }
 
     public int getId() {
-        return id;
+        return snakeID;
     }
 }
