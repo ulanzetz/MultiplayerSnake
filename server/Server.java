@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
+import static com.snakegame.server.Server.playerNames;
+import static com.snakegame.server.Server.playersIDs;
 import static com.snakegame.server.Server.snakeNumberByID;
 import static java.lang.Integer.parseInt;
 
@@ -27,6 +29,7 @@ public class Server {
     public static int serverStartPort;
     public static ArrayList<Integer> freeIDs = new ArrayList<Integer>();
     public static HashMap<Integer, Integer> snakeNumberByID = new HashMap<>();
+    public static HashMap<Integer, String> playerNames = new HashMap<>();
     private static Thread connectThread;
     private static DatagramSocket connectSocket;
 
@@ -89,9 +92,12 @@ class ConnectSocket implements Runnable {
                 else {
                     try {
                         int id = Server.connectedPlayers;
+                        String[] splitedData = data.split(" ");
+                        String name = splitedData.length > 1 ? data.split(" ")[1] : "Player";
                         if(Server.freeIDs.size() > 0) {
                             id = Collections.min(Server.freeIDs);
                         }
+                        playerNames.put(id, name);
                         if(!Server.playersIDs.containsKey(ipPort))
                             Server.playersIDs.put(ipPort, id);
                         if(gameMode.supportAddingPlayers) {
@@ -121,6 +127,7 @@ class ConnectSocket implements Runnable {
                     Server.freeIDs.add(playerID);
                     Server.playersIDs.remove(playerID);
                     snakeNumberByID.remove(playerID);
+                    playerNames.remove(playerID);
                     --Server.connectedPlayers;
                     Thread thread = Server.playerThreads.get(playerID);
                     Server.playerThreads.remove(playerID);
@@ -191,6 +198,9 @@ class Responder implements Runnable {
                     mes += game.board.snakes.get(i).score + "'";
                 }
                 mes += game.board.fruitPos.x + "," + game.board.fruitPos.y + "," + game.board.fruit.name +"'";
+                for(Integer i: playersIDs.values())
+                    mes += playerNames.get(i) + "%";
+                mes = mes.substring(0, mes.length() - 1) + "'";
                 sendData = mes.getBytes();
             }
             catch (Exception e) {

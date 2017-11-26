@@ -14,6 +14,7 @@ public class Panel extends JPanel  {
     private HashMap<Fruit, Image> fruitSprites = new HashMap<Fruit, Image>();
     private JLabel[] scoreLabels;
     public Game game;
+    private Client client;
 
     private static Color[] snakeColors =
             {Color.blue, Color.green, Color.red, Color.magenta};
@@ -39,6 +40,7 @@ public class Panel extends JPanel  {
         if(client != null) {
             client.game = game;
             client.infoChange();
+            this.client = client;
         }
         LoadImages();
     }
@@ -60,12 +62,22 @@ public class Panel extends JPanel  {
         Board board = game.board;
         g.drawImage(fruitSprites.get(board.fruit), board.getFruitPos().x * 30,  board.getFruitPos().y * 30, this);
         for(Snake snake: board.snakes) {
-            scoreLabels[snake.number].setText("Score: " + snake.score);
+            if(client == null)
+                scoreLabels[snake.number].setText("Score: " + snake.score);
             for (Point point : snake.snakePoints) {
                 //g.drawImage(snake_circle, point.x * 30, point.y * 30, this);
                 g.setColor(snakeColors[snake.number]);
                 g.drawOval(point.x * 30, point.y * 30, 30, 30);
                 g.fillOval(point.x * 30, point.y * 30, 30, 30);
+            }
+        }
+        if(client != null) {
+            int snakesCount = board.snakes.size();
+            for (int i = 0; i != scoreLabels.length; ++i) {
+                if (i < snakesCount)
+                    scoreLabels[i].setText(client.playerNames[i] + ": " + board.snakes.get(i).score);
+                else
+                    scoreLabels[i].setText("");
             }
         }
         //Toolkit.getDefaultToolkit().sync();

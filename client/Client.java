@@ -9,9 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.*;
 import java.util.ArrayList;
 
@@ -25,6 +23,7 @@ public class Client extends JFrame {
     private int connectPort;
     public boolean debugMode = false;
     private int snakeID;
+    public String[] playerNames;
 
     public Client()  {
         setTitle("Choose settings");
@@ -56,6 +55,17 @@ public class Client extends JFrame {
         serverPortBox.setLocation(85, 50);
         serverPortBox.setSize(80, 30);
 
+        JLabel nameLabel = new JLabel("Name");
+        panel.add(nameLabel);
+        nameLabel.setLocation(5, 90);
+        nameLabel.setSize(80, 30);
+
+        JTextField nameBox = new JTextField("Player");
+        panel.add(nameBox);
+        nameBox.setLocation(85, 90);
+        nameBox.setSize(80, 30);
+
+
         JButton startButton = new JButton("Start");
         panel.add(startButton);
         startButton.setLocation(200, 230);
@@ -63,7 +73,7 @@ public class Client extends JFrame {
 
         startButton.addActionListener(e -> {
             try {
-                initializeClient(ipBox.getText(), serverPortBox.getText(), true);
+                initializeClient(ipBox.getText(), serverPortBox.getText(),  nameBox.getText(), true);
             } catch (IOException e1) {
                 JFrameExtentions.infoBox("Incorrect format of data", "Error");
             }
@@ -73,18 +83,18 @@ public class Client extends JFrame {
     public Client(String ipString, String portString) {
         try {
             debugMode = true;
-            initializeClient(ipString, portString, false);
+            initializeClient(ipString, portString, "",false);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void initializeClient(String ipString, String portString, boolean useGui) throws IOException {
+    private void initializeClient(String ipString, String portString, String name, boolean useGui) throws IOException {
         ip = InetAddress.getByName(ipString);
         port = Integer.parseInt(portString);
         connectPort = port;
         socket = new DatagramSocket();
-        packet = new DatagramPacket("con".getBytes(), 3, ip, port);
+        packet = new DatagramPacket(("con "  + name).getBytes(), 4 + name.length(), ip, port);
         socket.send(packet);
         byte[] receiveData = new byte[50];
         packet = new DatagramPacket(receiveData, receiveData.length);
@@ -160,6 +170,7 @@ public class Client extends JFrame {
         int y = Integer.parseInt(fruitCords[1]);
         game.board.fruitPos = new Point(x, y);
         game.board.fruit = Fruit.fruits.get(fruitCords[2]);
+        playerNames = args[snakeCount + 1].split("%");
     }
 
     public void close() throws IOException {
