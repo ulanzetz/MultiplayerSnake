@@ -23,12 +23,13 @@ public class Server {
     public static int connectedPlayers = 0;
     public static HashMap<String, Integer> playersIDs = new HashMap<>();
     public static ArrayList<Integer> usingIDs = new ArrayList<>();
-    public static ArrayList<Thread> playerThreads = new ArrayList<>();
-    public static ArrayList<DatagramSocket> playerSockets = new ArrayList<>();
+    public static HashMap<Integer, Thread> playerThreads = new HashMap<>();
+    public static HashMap<Integer, DatagramSocket> playerSockets = new HashMap<>();
     public static int serverStartPort;
     public static ArrayList<Integer> freeIDs = new ArrayList<Integer>();
     public static HashMap<Integer, Integer> snakeNumberByID = new HashMap<>();
     public static HashMap<Integer, String> playerNames = new HashMap<>();
+    public static HashMap<String, Integer> nameScoreCounter = new HashMap<>();
     public static Thread connectThread;
     private static DatagramSocket connectSocket;
 
@@ -48,9 +49,9 @@ public class Server {
     }
 
     public static void close() {
-        for(Thread t: playerThreads)
+        for(Thread t: playerThreads.values())
             t.interrupt();
-        for(DatagramSocket s: playerSockets)
+        for(DatagramSocket s: playerSockets.values())
             s.close();
         connectThread.interrupt();
         connectSocket.close();
@@ -85,15 +86,16 @@ class ConnectSocket implements Runnable {
             InetAddress ip = packet.getAddress();
             int clientPort = packet.getPort();
             String ipPort = ip.toString() + ":" + clientPort;
+            String[] splitedData = data.split(" ");
+            String name = splitedData.length > 1 ? splitedData[1] : "Player";
             if(data.startsWith("con")) {
                 if((gameMode.supportAddingPlayers && Server.connectedPlayers >= gameMode.maxPlayers) ||
-                        (!gameMode.supportAddingPlayers && Server.connectedPlayers >= gameMode.snakeCount))
+                        (!gameMode.supportAddingPlayers && Server.connectedPlayers >= gameMode.snakeCount) ||
+                        playerNames.containsValue(name))
                     sendData = "not".getBytes();
                 else {
                     try {
                         int id = Server.connectedPlayers;
-                        String[] splitedData = data.split(" ");
-                        String name = splitedData.length > 1 ? splitedData[1] : "Player";
                         if(Server.freeIDs.size() > 0) {
                             id = Collections.min(Server.freeIDs);
                         }
@@ -113,8 +115,8 @@ class ConnectSocket implements Runnable {
                         Thread thread = new Thread(new Responder(playerSocket, id));
                         Server.connectedPlayers++;
                         thread.start();
-                        Server.playerThreads.add(thread);
-                        Server.playerSockets.add(playerSocket);
+                        Server.playerThreads.put(id, thread);
+                        Server.playerSockets.put(id, playerSocket);
                         Server.usingIDs.add(id);
                     } catch (Exception e) {
                         e.printStackTrace();
