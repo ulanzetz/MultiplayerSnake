@@ -1,6 +1,7 @@
 package com.snakegame.tests;
 
 import com.snakegame.client.Client;
+import com.snakegame.model.Direction;
 import com.snakegame.model.Snake;
 import com.snakegame.server.Server;
 import org.junit.Before;
@@ -92,6 +93,23 @@ public class ClientServerTests {
             ArrayList<Snake> serverSnakes = server.game.board.snakes;
             assertEquals(serverSnakes.get(0).score, clientSnakes.get(0).score);
             assertEquals(serverSnakes.get(1).score, clientSnakes.get(1).score);
+        }
+
+        @Test
+        public void clientCantChangeNotItsDirection() throws Exception{
+            Client client1 = new Client("127.0.0.1", "9866", "Player1");
+            Client client2 = new Client("127.0.0.1", "9866", "Player2");
+            client1.infoChange();
+            client2.infoChange();
+            Thread.sleep(1000);
+            ArrayList<Snake> clientSnakes = client1.game.board.snakes;
+            clientSnakes.get(0).setDirection(Direction.Right);
+            assertNotEquals(clientSnakes.get(1).getDirection(), clientSnakes.get(0).getDirection());
+        }
+
+        @Test
+        public void incorrectClientPackets() throws Exception{
+
         }
 
     }
