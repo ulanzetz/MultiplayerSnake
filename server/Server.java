@@ -126,33 +126,39 @@ class ConnectSocket implements Runnable {
             }
             else if(data.startsWith("dis")) {
                 if(Server.playersIDs.containsKey(ipPort)) {
-                    int playerID = Server.playersIDs.get(ipPort);
-                    Server.freeIDs.add(playerID);
-                    Server.playersIDs.remove(playerID);
-                    playerNames.remove(playerID);
-                    --Server.connectedPlayers;
-                    Thread playerThread = Server.playerThreads.get(playerID);
-                    Server.playerThreads.remove(playerID);
-                    playerThread.interrupt();
-                    DatagramSocket playerSocket = Server.playerSockets.get(playerID);
-                    Server.playerSockets.remove(playerID);
-                    Server.usingIDs.remove((Object)playerID);
-                    playerSocket.close();
-                    int playerSnakeNumber = snakeNumberByID.get(playerID);
-                    Snake playerSnake = null;
-                    for(Snake snake: game.board.snakes)
-                        if(snake.number == playerSnakeNumber)
-                            playerSnake = snake;
-                    if(playerSnake != null)
-                        game.board.snakes.remove(playerSnake);
-                    snakeNumberByID.remove(playerID);
-                    sendData = null;
-                    for(Integer i: snakeNumberByID.keySet()) {
-                        if(i > playerID) {
-                            int snakeNumber = snakeNumberByID.get(i);
-                            snakeNumberByID.put(i,  snakeNumber- 1);
-                            game.board.snakes.get(snakeNumber - 1).number--;
+                    try {
+                        int playerID = Server.playersIDs.get(ipPort);
+                        Server.freeIDs.add(playerID);
+                        Server.playersIDs.remove(playerID);
+                        playerNames.remove(playerID);
+                        --Server.connectedPlayers;
+                        Thread playerThread = Server.playerThreads.get(playerID);
+                        Server.playerThreads.remove(playerID);
+                        playerThread.interrupt();
+                        DatagramSocket playerSocket = Server.playerSockets.get(playerID);
+                        Server.playerSockets.remove(playerID);
+                        Server.usingIDs.remove((Object) playerID);
+                        playerSocket.close();
+                        int playerSnakeNumber = snakeNumberByID.get(playerID);
+                        Snake playerSnake = null;
+                        for (Snake snake : game.board.snakes)
+                            if (snake.number == playerSnakeNumber)
+                                playerSnake = snake;
+                        if (playerSnake != null)
+                            game.board.snakes.remove(playerSnake);
+                        snakeNumberByID.remove(playerID);
+                        sendData = null;
+                        for (Integer i : snakeNumberByID.keySet()) {
+                            if (i > playerID) {
+                                int snakeNumber = snakeNumberByID.get(i);
+                                snakeNumberByID.put(i, snakeNumber - 1);
+                                game.board.snakes.get(snakeNumber - 1).number--;
+                            }
                         }
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        sendData = null;
                     }
                 }
                 else
@@ -202,7 +208,9 @@ class Responder implements Runnable {
                 String[] splitedData = data.split(" ");
                 int x = parseInt(splitedData[0]);
                 int y = parseInt(splitedData[1]);
-                game.board.snakes.get(snakeNumberByID.get(playerID)).setDirection(new Point(x, y));
+                for(Snake snake: game.board.snakes)
+                    if(snake.number == playerID)
+                        snake.setDirection(new Point(x, y));
                 String mes = game.board.snakes.size() + "&";
                 for (int i = 0; i != game.board.snakes.size(); ++i) {
                     for (Point p : game.board.snakes.get(i).snakePoints)
