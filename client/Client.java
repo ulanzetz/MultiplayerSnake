@@ -88,6 +88,14 @@ public class Client extends JFrame {
             e.printStackTrace();
         }
     }
+    public Client(String ipString, String portString, String name) {
+        try {
+            debugMode = true;
+            initializeClient(ipString, portString, name,false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void initializeClient(String ipString, String portString, String name, boolean useGui) throws IOException {
         ip = InetAddress.getByName(ipString);
