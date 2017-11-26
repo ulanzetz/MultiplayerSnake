@@ -94,7 +94,7 @@ public class Client extends JFrame {
         port = Integer.parseInt(portString);
         connectPort = port;
         socket = new DatagramSocket();
-        packet = new DatagramPacket(("con "  + name).getBytes(), 4 + name.length(), ip, port);
+        packet = new DatagramPacket(("con "  + name + " ").getBytes(), 5 + name.length(), ip, port);
         socket.send(packet);
         byte[] receiveData = new byte[50];
         packet = new DatagramPacket(receiveData, receiveData.length);
