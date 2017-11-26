@@ -1,4 +1,4 @@
-package com.snakegame.tests;
+/*package com.snakegame.tests;
 
 import com.snakegame.client.Client;
 import com.snakegame.model.Board;
@@ -92,4 +92,4 @@ public class MultiplayerTests {
             socket.receive(packet);
         }
     }
-}
+}*/
