@@ -28,9 +28,7 @@ public class Server {
     public HashMap<Integer, DatagramSocket> playerSockets = new HashMap<>();
     public int serverStartPort;
     public ArrayList<Integer> freeIDs = new ArrayList<Integer>();
-    public HashMap<Integer, Integer> snakeNumberByID = new HashMap<>();
     public HashMap<Integer, String> playerNames = new HashMap<>();
-    public HashMap<String, Integer> nameScoreCounter = new HashMap<>();
     public Thread connectThread;
     private DatagramSocket connectSocket;
 
@@ -117,13 +115,12 @@ class ConnectSocket implements Runnable {
                             server.playersIDs.put(ipPort, id);
                         if(gameMode.supportAddingPlayers) {
                             game.board.snakes.add(new Snake(3, id));
-                            server.snakeNumberByID.put(id, game.board.snakes.size() - 1);
                         }
                         sendData = (game.board.getWidth() + " " +
                                 game.board.getHeight() + " " +
                                 game.delay  + " " +
                                 id + " " +
-                                modeName + " " + server.snakeNumberByID.get(id) + " ").getBytes();
+                                modeName + " ").getBytes();
                         DatagramSocket playerSocket = new DatagramSocket(server.serverStartPort + id + 1);
                         Thread thread = new Thread(new Responder(playerSocket, id, server));
                         server.connectedPlayers++;
@@ -152,22 +149,13 @@ class ConnectSocket implements Runnable {
                         server.playerSockets.remove(playerID);
                         server.usingIDs.remove((Object) playerID);
                         playerSocket.close();
-                        int playerSnakeNumber = server.snakeNumberByID.get(playerID);
                         Snake playerSnake = null;
                         for (Snake snake : game.board.snakes)
-                            if (snake.number == playerSnakeNumber)
+                            if (snake.number == playerID)
                                 playerSnake = snake;
                         if (playerSnake != null)
                             game.board.snakes.remove(playerSnake);
-                        server.snakeNumberByID.remove(playerID);
                         sendData = null;
-                        for (Integer i : server.snakeNumberByID.keySet()) {
-                            if (i > playerID) {
-                                int snakeNumber = server.snakeNumberByID.get(i);
-                                server.snakeNumberByID.put(i, snakeNumber - 1);
-                                game.board.snakes.get(snakeNumber - 1).number--;
-                            }
-                        }
                     }
                     catch (Exception e) {
                         e.printStackTrace();
@@ -217,8 +205,6 @@ class Responder implements Runnable {
             InetAddress ip = packet.getAddress();
             int clientPort = packet.getPort();
             String ipPort = ip.toString() + ":" + clientPort;
-            //if(Server.playersIDs.get(ipPort) != playerID)
-            //   continue;
             try {
                 String[] splitedData = data.split(" ");
                 int x = parseInt(splitedData[0]);
@@ -226,7 +212,7 @@ class Responder implements Runnable {
                 for(Snake snake: game.board.snakes)
                     if(snake.number == playerID)
                         snake.setDirection(new Point(x, y));
-                String mes = game.board.snakes.size() + "&";
+                String mes = getIdsString() + "&";
                 for (int i = 0; i != game.board.snakes.size(); ++i) {
                     for (Point p : game.board.snakes.get(i).snakePoints)
                         mes += p.x + "," + p.y + ' ';
@@ -249,6 +235,13 @@ class Responder implements Runnable {
                 e.printStackTrace();
             }
         }
+    }
+
+    private String getIdsString() {
+        String ids = "";
+        for(Snake snake: server.game.board.snakes)
+            ids += snake.number+"-";
+        return ids.substring(0, ids.length() - 1);
     }
 
 }

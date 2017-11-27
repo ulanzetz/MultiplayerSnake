@@ -12,6 +12,7 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Client extends JFrame {
     private int id;
@@ -22,7 +23,6 @@ public class Client extends JFrame {
     private int port;
     private int connectPort;
     public boolean debugMode = false;
-    private int snakeID;
     public String[] playerNames;
 
     public Client()  {
@@ -117,7 +117,6 @@ public class Client extends JFrame {
         GameMode.loadGameMods();
         Fruit.loadFruits();
         GameMode mode = GameMode.gameMods.get(args[4]);
-        snakeID = Integer.parseInt(args[5]);
         Panel panel1 = new Panel(width, height, delay, mode, this);
 
         if(useGui) {
@@ -142,9 +141,8 @@ public class Client extends JFrame {
     }
 
     public void infoChange() throws IOException {
-        while (game.board.snakes.size() > 0 && snakeID >= game.board.snakes.size())
-            snakeID--;
-        Point dir = game.board.snakes.size() > 0 ? game.board.snakes.get(snakeID).getDirection() : Direction.Down;
+
+        Point dir = game.board.snakes.size() > 0 ? getPlayerSnake().getDirection() : Direction.Down;
         byte[] mes = (dir.x + " " + dir.y + " ").getBytes();
         packet = new DatagramPacket(mes, mes.length, ip, port);
         socket.send(packet);
@@ -153,11 +151,13 @@ public class Client extends JFrame {
         socket.setSoTimeout(1000);
         socket.receive(packet);
         String data[] = new String(receiveData).split("&");
-        int snakeCount = Integer.parseInt(data[0]);
-        if(snakeCount != game.board.snakes.size()) {
-            game.board.snakes = new ArrayList<Snake>(snakeCount);
+        int snakeNumbers[] = Arrays.stream(data[0].split("-")).mapToInt(Integer::parseInt).toArray();
+        int snakeCount = snakeNumbers.length;
+        if(snakeCount != game.board.snakes.size())
+        {
+            game.board.snakes = new ArrayList<Snake>();
             for(int i = 0; i != snakeCount; ++i)
-                game.board.snakes.add(new Snake(3, i));
+                game.board.snakes.add(new Snake(3, snakeNumbers[i]));
         }
         String args[] = data[1].split("'");
         for (int i = 0; i != snakeCount; ++i) {
@@ -194,6 +194,13 @@ public class Client extends JFrame {
     }
 
     public int getId() {
-        return snakeID;
+        return id;
+    }
+
+    private Snake getPlayerSnake() {
+        for(Snake snake: game.board.snakes)
+            if(snake.number == id)
+                return snake;
+        return null;
     }
 }

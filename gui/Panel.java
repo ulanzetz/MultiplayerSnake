@@ -9,7 +9,6 @@ import javax.swing.plaf.synth.ColorType;
 
 import com.snakegame.client.Client;
 import com.snakegame.model.*;
-import com.sun.jmx.snmp.SnmpUsmKeyHandler;
 
 public class Panel extends JPanel  {
     private HashMap<Fruit, Image> fruitSprites = new HashMap<Fruit, Image>();
