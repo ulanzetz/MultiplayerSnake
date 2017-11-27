@@ -13,28 +13,34 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
-import static com.snakegame.server.Server.playerNames;
-import static com.snakegame.server.Server.playersIDs;
-import static com.snakegame.server.Server.snakeNumberByID;
+import static com.snakegame.server.Server.*;
 import static java.lang.Integer.parseInt;
 
 public class Server {
+    public static HashSet<Server> activeServers = new HashSet<>();
+    public Game game;
+    public int connectedPlayers = 0;
+    public HashMap<String, Integer> playersIDs = new HashMap<>();
+    public ArrayList<Integer> usingIDs = new ArrayList<>();
+    public HashMap<Integer, Thread> playerThreads = new HashMap<>();
+    public HashMap<Integer, DatagramSocket> playerSockets = new HashMap<>();
+    public int serverStartPort;
+    public ArrayList<Integer> freeIDs = new ArrayList<Integer>();
+    public HashMap<Integer, Integer> snakeNumberByID = new HashMap<>();
+    public HashMap<Integer, String> playerNames = new HashMap<>();
+    public HashMap<String, Integer> nameScoreCounter = new HashMap<>();
+    public Thread connectThread;
+    private DatagramSocket connectSocket;
 
-    public static Game game;
-    public static int connectedPlayers = 0;
-    public static HashMap<String, Integer> playersIDs = new HashMap<>();
-    public static ArrayList<Thread> playerThreads = new ArrayList<>();
-    public static ArrayList<DatagramSocket> playerSockets = new ArrayList<>();
-    public static int serverStartPort;
-    public static ArrayList<Integer> freeIDs = new ArrayList<Integer>();
-    public static HashMap<Integer, Integer> snakeNumberByID = new HashMap<>();
-    public static HashMap<Integer, String> playerNames = new HashMap<>();
-    private static Thread connectThread;
-    private static DatagramSocket connectSocket;
-
-    public static void main(String args[]) throws Exception {
+    public Server(String args[]) throws Exception {
         serverStartPort = parseInt(args[0]);
+        for(Server s : activeServers) {
+            if (s.serverStartPort == serverStartPort) {
+                s.close();
+            }
+        }
         int width = parseInt(args[1]);
         int height = parseInt(args[2]);
         if(width < 3 || height < 3)
@@ -44,77 +50,87 @@ public class Server {
         GameMode mode = GameMode.gameMods.get(args[4]);
         game = new Game(width, height, delay, mode, null, null);
         connectSocket = new DatagramSocket(serverStartPort);
-        connectThread = new Thread(new ConnectSocket(connectSocket, args[4], game));
+        connectThread = new Thread(new ConnectSocket(connectSocket, args[4], game, this));
         connectThread.start();
+        activeServers.add(this);
     }
 
-    public static void close() {
-        for(Thread t: playerThreads)
+    public void close() {
+        for(Thread t: playerThreads.values())
             t.interrupt();
-        for(DatagramSocket s: playerSockets)
+        for(DatagramSocket s: playerSockets.values())
             s.close();
         connectThread.interrupt();
         connectSocket.close();
+        connectedPlayers = 0;
+
     }
+
+    public static void main(String args[]) throws Exception { new Server(args); }
 }
 class ConnectSocket implements Runnable {
     private DatagramSocket socket = null;
     private Game game;
     private String modeName;
+    private Server server;
 
-    public ConnectSocket(DatagramSocket socket, String modeName, Game game) {
+    public ConnectSocket(DatagramSocket socket, String modeName, Game game, Server server) {
         this.socket = socket;
         this.modeName = modeName;
         this.game = game;
+        this.server = server;
     }
 
     public void run() {
-        byte[] receiveData = new byte[10];
+        byte[] receiveData = new byte[30];
         byte[] sendData;
         GameMode gameMode = game.gameMode;
         while (true) {
-            if(Thread.currentThread().isInterrupted())
-                return;
+            receiveData = new byte[receiveData.length];
             DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
             try {
                 socket.receive(packet);
             } catch (IOException e) {
-                e.printStackTrace();
+                continue;
             }
+            if(server.connectThread.isInterrupted())
+                return;
             String data = new String(packet.getData());
             InetAddress ip = packet.getAddress();
             int clientPort = packet.getPort();
             String ipPort = ip.toString() + ":" + clientPort;
+            String[] splitedData = data.split(" ");
+            String name = splitedData.length > 1 ? splitedData[1] : "Player";
             if(data.startsWith("con")) {
-                if((gameMode.supportAddingPlayers && Server.connectedPlayers >= gameMode.maxPlayers) ||
-                        (!gameMode.supportAddingPlayers && Server.connectedPlayers >= gameMode.snakeCount))
+                if((gameMode.supportAddingPlayers && server.connectedPlayers >= gameMode.maxPlayers) ||
+                        (!gameMode.supportAddingPlayers && server.connectedPlayers >= gameMode.snakeCount) ||
+                        server.playerNames.containsValue(name))
                     sendData = "not".getBytes();
                 else {
                     try {
-                        int id = Server.connectedPlayers;
-                        String[] splitedData = data.split(" ");
-                        String name = splitedData.length > 1 ? data.split(" ")[1] : "Player";
-                        if(Server.freeIDs.size() > 0) {
-                            id = Collections.min(Server.freeIDs);
+                        int id = server.connectedPlayers;
+                        if(server.freeIDs.size() > 0) {
+                            id = Collections.min(server.freeIDs);
                         }
-                        playerNames.put(id, name);
-                        if(!Server.playersIDs.containsKey(ipPort))
-                            Server.playersIDs.put(ipPort, id);
+                        server.playerNames.put(id, name);
+                        if(!server.playersIDs.containsKey(ipPort))
+                            server.playersIDs.put(ipPort, id);
                         if(gameMode.supportAddingPlayers) {
                             game.board.snakes.add(new Snake(3, id));
-                            snakeNumberByID.put(id, game.board.snakes.size() - 1);
+                            server.snakeNumberByID.put(id, game.board.snakes.size() - 1);
                         }
                         sendData = (game.board.getWidth() + " " +
                                 game.board.getHeight() + " " +
                                 game.delay  + " " +
                                 id + " " +
-                                modeName + " " + snakeNumberByID.get(id) + " ").getBytes();
-                        DatagramSocket playerSocket = new DatagramSocket(Server.serverStartPort + id + 1);
-                        Thread thread = new Thread(new Responder(playerSocket, id));
-                        Server.connectedPlayers++;
+                                modeName + " " + server.snakeNumberByID.get(id) + " ").getBytes();
+                        DatagramSocket playerSocket = new DatagramSocket(server.serverStartPort + id + 1);
+                        Thread thread = new Thread(new Responder(playerSocket, id, server));
+                        server.connectedPlayers++;
                         thread.start();
-                        Server.playerThreads.add(thread);
-                        Server.playerSockets.add(playerSocket);
+                        server.playerThreads.put(id, thread);
+                        server.playerSockets.put(id, playerSocket);
+                        server.usingIDs.add(id);
                     } catch (Exception e) {
                         e.printStackTrace();
                         sendData = "error".getBytes();
@@ -122,27 +138,40 @@ class ConnectSocket implements Runnable {
                 }
             }
             else if(data.startsWith("dis")) {
-                if(Server.playersIDs.containsKey(ipPort)) {
-                    int playerID = Server.playersIDs.get(ipPort);
-                    Server.freeIDs.add(playerID);
-                    Server.playersIDs.remove(playerID);
-                    snakeNumberByID.remove(playerID);
-                    playerNames.remove(playerID);
-                    --Server.connectedPlayers;
-                    Thread thread = Server.playerThreads.get(playerID);
-                    Server.playerThreads.remove(playerID);
-                    thread.interrupt();
-                    DatagramSocket playerSocket = Server.playerSockets.get(playerID);
-                    Server.playerSockets.remove(playerID);
-                    playerSocket.close();
-                    game.board.snakes.remove(playerID);
-                    sendData = "ok".getBytes();
-                    for(Integer i: snakeNumberByID.keySet()) {
-                        if(i > playerID) {
-                            int snakeNumber = snakeNumberByID.get(i);
-                            snakeNumberByID.put(i,  snakeNumber- 1);
-                            game.board.snakes.get(snakeNumber).number--;
+                if(server.playersIDs.containsKey(ipPort)) {
+                    try {
+                        int playerID = server.playersIDs.get(ipPort);
+                        server.freeIDs.add(playerID);
+                        server.playersIDs.remove(playerID);
+                        server.playerNames.remove(playerID);
+                        --server.connectedPlayers;
+                        Thread playerThread = server.playerThreads.get(playerID);
+                        server.playerThreads.remove(playerID);
+                        playerThread.interrupt();
+                        DatagramSocket playerSocket = server.playerSockets.get(playerID);
+                        server.playerSockets.remove(playerID);
+                        server.usingIDs.remove((Object) playerID);
+                        playerSocket.close();
+                        int playerSnakeNumber = server.snakeNumberByID.get(playerID);
+                        Snake playerSnake = null;
+                        for (Snake snake : game.board.snakes)
+                            if (snake.number == playerSnakeNumber)
+                                playerSnake = snake;
+                        if (playerSnake != null)
+                            game.board.snakes.remove(playerSnake);
+                        server.snakeNumberByID.remove(playerID);
+                        sendData = null;
+                        for (Integer i : server.snakeNumberByID.keySet()) {
+                            if (i > playerID) {
+                                int snakeNumber = server.snakeNumberByID.get(i);
+                                server.snakeNumberByID.put(i, snakeNumber - 1);
+                                game.board.snakes.get(snakeNumber - 1).number--;
+                            }
                         }
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        sendData = null;
                     }
                 }
                 else
@@ -151,8 +180,10 @@ class ConnectSocket implements Runnable {
             else
                 sendData = "bad response".getBytes();
             try {
-                socket.send(new DatagramPacket(sendData, sendData.length, ip, clientPort));
-            } catch (IOException e) {
+                if(sendData != null) {
+                    socket.send(new DatagramPacket(sendData, sendData.length, ip, clientPort));
+                }
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -162,24 +193,26 @@ class ConnectSocket implements Runnable {
 class Responder implements Runnable {
     private DatagramSocket socket = null;
     private int playerID;
+    private Server server;
 
-    public Responder(DatagramSocket socket, int playerID) {
+    public Responder(DatagramSocket socket, int playerID, Server server) {
         this.socket = socket;
         this.playerID = playerID;
+        this.server = server;
     }
     public void run() {
         byte[] receiveData = new byte[10];
         byte[] sendData;
-        Game game = Server.game;
+        Game game = server.game;
         while (true) {
-            if(Thread.currentThread().isInterrupted())
-                return;
             DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
             try {
                 socket.receive(packet);
             } catch (IOException e) {
-                e.printStackTrace();
+                continue;
             }
+            if(Thread.currentThread().isInterrupted())
+                return;
             String data = new String(packet.getData());
             InetAddress ip = packet.getAddress();
             int clientPort = packet.getPort();
@@ -190,7 +223,9 @@ class Responder implements Runnable {
                 String[] splitedData = data.split(" ");
                 int x = parseInt(splitedData[0]);
                 int y = parseInt(splitedData[1]);
-                game.board.snakes.get(snakeNumberByID.get(playerID)).setDirection(new Point(x, y));
+                for(Snake snake: game.board.snakes)
+                    if(snake.number == playerID)
+                        snake.setDirection(new Point(x, y));
                 String mes = game.board.snakes.size() + "&";
                 for (int i = 0; i != game.board.snakes.size(); ++i) {
                     for (Point p : game.board.snakes.get(i).snakePoints)
@@ -198,12 +233,13 @@ class Responder implements Runnable {
                     mes += game.board.snakes.get(i).score + "'";
                 }
                 mes += game.board.fruitPos.x + "," + game.board.fruitPos.y + "," + game.board.fruit.name +"'";
-                for(Integer i: playersIDs.values())
-                    mes += playerNames.get(i) + "%";
+                for(Integer i: server.usingIDs)
+                    mes += server.playerNames.get(i) + "%";
                 mes = mes.substring(0, mes.length() - 1) + "'";
                 sendData = mes.getBytes();
             }
             catch (Exception e) {
+                e.printStackTrace();
                 continue;
             }
             packet = new DatagramPacket(sendData, sendData.length, ip, clientPort);
