@@ -7,7 +7,6 @@ import com.snakegame.server.Server;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 
 import java.awt.*;
