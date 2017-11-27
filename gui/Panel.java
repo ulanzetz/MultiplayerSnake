@@ -115,6 +115,7 @@ public class Panel extends JPanel  {
                                 if(snake.number == id)
                                     snake.setDirection(Direction.getDirection(j));
                         } catch (Exception e1) {
+                            e1.printStackTrace();
                             continue;
                         }
                         return;

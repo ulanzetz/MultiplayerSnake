@@ -9,8 +9,13 @@ import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
+import javax.xml.crypto.Data;
 import java.awt.*;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 
 import static org.junit.Assert.*;
@@ -99,16 +104,23 @@ public class ClientServerTests {
             Client client1 = new Client("127.0.0.1", "9866", "Player1");
             Client client2 = new Client("127.0.0.1", "9866", "Player2");
             client1.infoChange();
-            client2.infoChange();
             Thread.sleep(1000);
             ArrayList<Snake> clientSnakes = client1.game.board.snakes;
             clientSnakes.get(0).setDirection(Direction.Right);
-            assertNotEquals(clientSnakes.get(1).getDirection(), clientSnakes.get(0).getDirection());
+            client1.infoChange();
+            Thread.sleep(1000);
+            assertEquals(server.game.board.snakes.get(1).getDirection(), Direction.Down);
         }
 
         @Test
-        public void incorrectClientPackets() throws Exception{
-
+        public void testWrongPacket() throws IOException {
+            InetAddress ip = InetAddress.getByName("127.0.0.1");
+            DatagramSocket socket = new DatagramSocket();
+            String message = "some wrong message";
+            DatagramPacket packet = new DatagramPacket(message.getBytes(), message.length(), ip, 9866);
+            socket.send(packet);
+            socket.setSoTimeout(1000);
+            socket.receive(packet);
         }
 
     }
