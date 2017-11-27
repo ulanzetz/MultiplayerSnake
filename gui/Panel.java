@@ -9,6 +9,7 @@ import javax.swing.plaf.synth.ColorType;
 
 import com.snakegame.client.Client;
 import com.snakegame.model.*;
+import com.sun.jmx.snmp.SnmpUsmKeyHandler;
 
 public class Panel extends JPanel  {
     private HashMap<Fruit, Image> fruitSprites = new HashMap<Fruit, Image>();
@@ -111,7 +112,9 @@ public class Panel extends JPanel  {
                 for(int j = 0; j != 4; ++j)
                     if(playersControls[0][j] == key) {
                         try {
-                            board.snakes.get(id).setDirection(Direction.getDirection(j));
+                            for(Snake snake: board.snakes)
+                                if(snake.number == id)
+                                    snake.setDirection(Direction.getDirection(j));
                         } catch (Exception e1) {
                             continue;
                         }
