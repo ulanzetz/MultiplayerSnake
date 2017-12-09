@@ -90,21 +90,13 @@ public class Client extends JFrame {
         });
     }
 
-    public Client(String ipString, String portString) {
-        try {
-            debugMode = true;
-            initializeClient(ipString, portString, "", "", false);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public Client(String ipString, String portString, String name, String passwd) throws IOException {
+        debugMode = true;
+        initializeClient(ipString, portString, name, passwd, false);
     }
-    public Client(String ipString, String portString, String name) {
-        try {
-            debugMode = true;
-            initializeClient(ipString, portString, name, "pass", false);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public Client(String ipString, String portString, String name) throws IOException{
+        debugMode = true;
+        initializeClient(ipString, portString, name, "pass", false);
     }
 
     private void initializeClient(String ipString, String portString, String name, String passwd, boolean useGui) throws IOException {

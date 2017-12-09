@@ -31,15 +31,15 @@ public class ClientServerTests {
             server =  new Server(new String[]{"9866", "20", "20", "40", "multiplayerinfsnakes"});
         }
 
-        @Test(expected = NumberFormatException.class)
+        @Test(expected = IOException.class)
         public void testNotConnectTwoClientWithSameNick() throws Exception {
-            Client client1 = new Client("127.0.0.1", "9866", "Player");
-            Client client2 = new Client("127.0.0.1", "9866", "Player");
+            new Client("127.0.0.1", "9866", "Player");
+            new Client("127.0.0.1", "9866", "Player");
         }
 
         @Test
         public void testClientDisconnect() throws Exception {
-            Client client1 = new Client("127.0.0.1", "9866", "Player1");
+            new Client("127.0.0.1", "9866", "Player1");
             Client client2 = new Client("127.0.0.1", "9866", "Player2");
             client2.close();
             Thread.sleep(1000);
@@ -61,10 +61,10 @@ public class ClientServerTests {
         @Test
         public void testClientReconnect() throws Exception {
             Client client1 = new Client("127.0.0.1", "9866", "Player1");
-            Client client2 = new Client("127.0.0.1", "9866", "Player2");
+            new Client("127.0.0.1", "9866", "Player2");
             client1.close();
             Thread.sleep(1000);
-            client1 = new Client("127.0.0.1", "9866", "Player1");
+            new Client("127.0.0.1", "9866", "Player1");
             Thread.sleep(1000);
             assertEquals(server.connectedPlayers, 2);
             assertEquals(server.game.board.snakes.size(), 2);
@@ -74,8 +74,8 @@ public class ClientServerTests {
         public void clientHavePlayersNames() throws Exception {
             String[] testNames = {"testname1", "TestName2", "*/Specific_Player_Name=3`"};
             Client client1 = new Client("127.0.0.1", "9866", testNames[0]);
-            Client client2 = new Client("127.0.0.1", "9866", testNames[1]);
-            Client client3 = new Client("127.0.0.1", "9866", testNames[2]);
+            new Client("127.0.0.1", "9866", testNames[1]);
+            new Client("127.0.0.1", "9866", testNames[2]);
             Thread.sleep(1000);
             client1.infoChange();
             assertArrayEquals(client1.playerNames, testNames);
@@ -102,7 +102,7 @@ public class ClientServerTests {
         @Test
         public void clientCantChangeNotItsDirection() throws Exception{
             Client client1 = new Client("127.0.0.1", "9866", "Player1");
-            Client client2 = new Client("127.0.0.1", "9866", "Player2");
+            new Client("127.0.0.1", "9866", "Player2");
             client1.infoChange();
             Thread.sleep(1000);
             ArrayList<Snake> clientSnakes = client1.game.board.snakes;

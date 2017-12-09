@@ -73,8 +73,12 @@ class Responder implements Runnable {
         }
         mes.append(game.board.fruitPos.x).append(",").append(game.board.fruitPos.y).append(",").
                 append(game.board.fruit.name).append("'");
-        for(Player p: server.players.values())
-            mes.append(p.name).append("%");
+        StringBuilder finalMes = mes;
+        server.players.values()
+                .stream()
+                .sorted((p1, p2) -> Integer.compare(p1.ID, p2.ID))
+                .forEach(p -> finalMes.append(p.name).append("%"));
+        mes = finalMes;
         mes = new StringBuilder(mes.substring(0, mes.length() - 1) + "'");
         return mes.toString().getBytes();
     }
