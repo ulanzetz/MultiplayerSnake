@@ -4,17 +4,18 @@ import com.snakegame.model.Snake;
 
 import java.net.DatagramSocket;
 
-class Player {
+public class Player {
     Thread thread;
     DatagramSocket socket;
     int ID;
     String name;
-    Snake snake;
+    public Snake snake;
 
     Player(int ID, DatagramSocket socket, String name, Snake snake)
     {
         this.ID = ID;
         this.socket = socket;
         this.name = name;
+        this.snake = snake;
     }
 }

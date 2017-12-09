@@ -3,6 +3,7 @@ package com.snakegame.server;
 import com.snakegame.model.Game;
 import com.snakegame.model.GameMode;
 import com.snakegame.model.Snake;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -41,7 +42,8 @@ class ConnectSocket implements Runnable {
             if(data.startsWith("con")) {
                 String[] splitedData = data.split(" ");
                 String name = splitedData.length > 1 ? splitedData[1] : "Player";
-                connect(name, ip, clientPort);
+                String passwd = splitedData.length > 2 ? splitedData[2] : "";
+                connect(name, passwd, ip, clientPort);
             }
             else if(data.startsWith("dis"))
                 disconnect(ip, clientPort);
@@ -57,13 +59,11 @@ class ConnectSocket implements Runnable {
         }
     }
 
-    private void connect(String name, InetAddress ip, int clientPort) {
+    private void connect(String name, String passwd, InetAddress ip, int clientPort) {
         byte[] sendData;
-        GameMode gameMode = game.gameMode;
         String ipPort = ip.toString() + ":" + clientPort;
-        if((gameMode.supportAddingPlayers && server.connectedPlayers >= gameMode.maxPlayers) ||
-                (!gameMode.supportAddingPlayers && server.connectedPlayers >= gameMode.snakeCount) ||
-                server.playerNamesContains(name))
+        Integer score = loadScore(name, passwd);
+        if(score == null)
             sendData = "not".getBytes();
         else {
             try {
@@ -77,10 +77,11 @@ class ConnectSocket implements Runnable {
                         id + " " +
                         modeName + " ").getBytes();
                 DatagramSocket playerSocket = new DatagramSocket(server.serverStartPort + id + 1);
-                Snake snake = new Snake(3, id);
+                Snake snake = new Snake(3, id, score);
                 game.board.snakes.add(snake);
                 Player player = new Player(id, playerSocket, name, snake);
                 Thread thread = new Thread(new Responder(player, server));
+                player.thread = thread;
                 server.connectedPlayers++;
                 thread.start();
                 server.players.put(ipPort, player);
@@ -96,11 +97,27 @@ class ConnectSocket implements Runnable {
         }
     }
 
+    @Nullable
+    private Integer loadScore(String name, String passwd) {
+        GameMode gameMode = game.gameMode;
+        if((gameMode.supportAddingPlayers && server.connectedPlayers >= gameMode.maxPlayers) ||
+                (!gameMode.supportAddingPlayers && server.connectedPlayers >= gameMode.snakeCount) ||
+                server.playerNamesContains(name))
+            return null;
+        try {
+            return DbHandler.dbHandler.loadPlayerScore(name, passwd);
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+
     private void disconnect(InetAddress ip, int clientPort) {
         String ipPort = ip.toString() + ":" + clientPort;
         if(server.playerIpPortsContains(ipPort)) {
             try {
                 Player player = server.players.get(ipPort);
+                DbHandler.dbHandler.updatePlayer(player.name, player.snake.score);
                 server.freeIDs.add(player.ID);
                 --server.connectedPlayers;
                 player.thread.interrupt();

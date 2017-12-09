@@ -4,15 +4,9 @@ import com.snakegame.model.Game;
 import com.snakegame.model.GameMode;
 import com.snakegame.model.Snake;
 
-import java.awt.*;
-import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
 import java.util.*;
 
-import static com.snakegame.server.Server.*;
 import static java.lang.Integer.parseInt;
 
 public class Server {
@@ -40,6 +34,7 @@ public class Server {
         GameMode.loadGameMods();
         GameMode mode = GameMode.gameMods.get(args[4]);
         game = new Game(width, height, delay, mode, null, null);
+        game.board.server = this;
         connectSocket = new DatagramSocket(serverStartPort);
         connectThread = new Thread(new ConnectSocket(connectSocket, args[4], game, this));
         connectThread.start();
@@ -47,7 +42,7 @@ public class Server {
         players = new HashMap<>();
     }
 
-    public void close() {
+    private void close() {
         for(Player p: players.values())
         {
             p.socket.close();
@@ -58,14 +53,21 @@ public class Server {
         connectedPlayers = 0;
     }
 
-    public boolean playerNamesContains(String name) {
+    boolean playerNamesContains(String name) {
         for(Player p: players.values())
             if(Objects.equals(p.name, name))
                 return true;
         return false;
     }
 
-    public boolean playerIpPortsContains(String ipPort) {
+    public Player playerBySnake(Snake snake) {
+        for(Player p: players.values())
+            if(Objects.equals(p.snake, snake))
+                return p;
+        return null;
+    }
+
+    boolean playerIpPortsContains(String ipPort) {
         return players.containsKey(ipPort);
     }
 

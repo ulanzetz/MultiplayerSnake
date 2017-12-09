@@ -1,5 +1,7 @@
 package com.snakegame.model;
 
+import com.snakegame.server.Server;
+
 import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ public class Board implements Serializable{
     public Point fruitPos;
     public Fruit fruit;
     private GameMode gameMode;
+    public Server server = null;
     public ArrayList<Snake> snakes;
     public boolean finished;
     public int score;
@@ -72,7 +75,10 @@ public class Board implements Serializable{
                 finished = true;
                 return;
             }
-            snakes.set(snakeNumber, new Snake(snakeStartSize, snake.number, snakes.get(snakeNumber).score));
+            Snake newSnake = new Snake(snakeStartSize, snake.number, snakes.get(snakeNumber).score);
+            if(server != null)
+                server.playerBySnake(snake).snake = newSnake;
+            snakes.set(snakeNumber, newSnake);
         }
         int size = snake.snakePoints.size();
         for(int i = 0; i != snakes.size(); ++i)

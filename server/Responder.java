@@ -15,7 +15,7 @@ class Responder implements Runnable {
     private Player player;
     private Server server;
 
-    public Responder(Player player, Server server) {
+    Responder(Player player, Server server) {
         this.player = player;
         this.server = server;
         player.thread = Thread.currentThread();
@@ -58,9 +58,9 @@ class Responder implements Runnable {
     }
 
     private String getIdsString() {
-        String ids = "";
+        StringBuilder ids = new StringBuilder();
         for(Snake snake: server.game.board.snakes)
-            ids += snake.number+"-";
+            ids.append(snake.number).append("-");
         return ids.substring(0, ids.length() - 1);
     }
 

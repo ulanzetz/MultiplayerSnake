@@ -65,6 +65,16 @@ public class Client extends JFrame {
         nameBox.setLocation(85, 90);
         nameBox.setSize(80, 30);
 
+        JLabel passLabel = new JLabel("Password");
+        panel.add(passLabel);
+        passLabel.setLocation(5, 130);
+        passLabel.setSize(80, 30);
+
+        JPasswordField passBox = new JPasswordField();
+        panel.add(passBox);
+        passBox.setLocation(85, 130);
+        passBox.setSize(80, 30);
+
 
         JButton startButton = new JButton("Start");
         panel.add(startButton);
@@ -73,9 +83,9 @@ public class Client extends JFrame {
 
         startButton.addActionListener(e -> {
             try {
-                initializeClient(ipBox.getText(), serverPortBox.getText(),  nameBox.getText(), true);
+                initializeClient(ipBox.getText(), serverPortBox.getText(),  nameBox.getText(), new String(passBox.getPassword()), true);
             } catch (IOException e1) {
-                JFrameExtentions.infoBox("Incorrect format of data", "Error");
+                JFrameExtentions.infoBox("Incorrect format of data:\n" + e1.getMessage(), "Error");
             }
         });
     }
@@ -83,7 +93,7 @@ public class Client extends JFrame {
     public Client(String ipString, String portString) {
         try {
             debugMode = true;
-            initializeClient(ipString, portString, "",false);
+            initializeClient(ipString, portString, "", "", false);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -91,23 +101,34 @@ public class Client extends JFrame {
     public Client(String ipString, String portString, String name) {
         try {
             debugMode = true;
-            initializeClient(ipString, portString, name,false);
+            initializeClient(ipString, portString, name, "pass", false);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void initializeClient(String ipString, String portString, String name, boolean useGui) throws IOException {
+    private void initializeClient(String ipString, String portString, String name, String passwd, boolean useGui) throws IOException {
+        if(passwd.length() < 3)
+            throw new IOException("Incorrect password");
         ip = InetAddress.getByName(ipString);
         port = Integer.parseInt(portString);
         connectPort = port;
         socket = new DatagramSocket();
-        packet = new DatagramPacket(("con "  + name + " ").getBytes(), 5 + name.length(), ip, port);
+        packet = new DatagramPacket(("con "  + name + " " + passwd + " ").getBytes(),
+                6 + name.length() + passwd.length(), ip, port);
         socket.send(packet);
         byte[] receiveData = new byte[50];
         packet = new DatagramPacket(receiveData, receiveData.length);
-        socket.receive(packet);
+        socket.setSoTimeout(3000);
+        try {
+            socket.receive(packet);
+        }
+        catch (SocketTimeoutException e) {
+            throw new IOException("Incorrect server");
+        }
         String answer = new String(receiveData);
+        if(answer.startsWith("not"))
+            throw new IOException("Incorrent server response");
         String args[] = answer.split(" ");
         int width = Integer.parseInt(args[0]);
         int height = Integer.parseInt(args[1]);
