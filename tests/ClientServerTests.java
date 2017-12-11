@@ -17,6 +17,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Random;
 
 import static org.junit.Assert.*;
 
@@ -33,8 +34,8 @@ public class ClientServerTests {
 
         @Test(expected = IOException.class)
         public void testNotConnectTwoClientWithSameNick() throws Exception {
-            new Client("127.0.0.1", "9866", "Player");
-            new Client("127.0.0.1", "9866", "Player");
+            new Client("127.0.0.1", "9866", "Player1");
+            new Client("127.0.0.1", "9866", "Player1");
         }
 
         @Test
@@ -122,6 +123,69 @@ public class ClientServerTests {
             socket.setSoTimeout(1000);
             socket.receive(packet);
         }
+    }
+
+    public static class DbTests {
+        Server server = null;
+        @Before
+        public void testData() throws Exception {
+            server =  new Server(new String[]{"9866", "20", "20", "40", "multiplayerinfsnakes"});
+        }
+
+        @Test(expected = IOException.class)
+        public void testCantLoginWithBadPasswd() throws IOException {
+            new Client("127.0.0.1", "9866", "testPlayer", "pass");
+            new Client("127.0.0.1", "9866", "testPlayer", "annotherpass");
+        }
+
+        @Test
+        public void testSaveScore() throws IOException, InterruptedException {
+            Client client = new Client("127.0.0.1", "9866", "testPlayer", "pass");
+            int rand = new Random().nextInt(1000) + 1;
+            server.game.board.snakes.get(0).score = rand;
+            client.close();
+            client = new Client("127.0.0.1", "9866", "testPlayer", "pass");
+            client.infoChange();
+            Thread.sleep(1000);
+            assertEquals(client.game.board.snakes.get(0).score, rand);
+        }
+
+        @Test(expected = IOException.class)
+        public void testCantSQLInjection() throws IOException {
+            String name = "name' OR 1 = 1 --";
+            new Client("127.0.0.1", "9866", name, "pass");
+        }
+
+        @Test
+        public void testScoreSaveAfterServerReboot() throws Exception {
+            Client client = new Client("127.0.0.1", "9866", "testPlayer", "pass");
+            int rand = new Random().nextInt(1000) + 1;
+            server.game.board.snakes.get(0).score = rand;
+            client.close();
+            server =  new Server(new String[]{"9866", "20", "20", "40", "multiplayerinfsnakes"});
+            client = new Client("127.0.0.1", "9866", "testPlayer", "pass");
+            assertEquals(client.game.board.snakes.get(0).score, rand);
+        }
+
+        @Test
+        public void testFourPlayers() throws IOException {
+            for(int i = 0; i != 4; ++i) {
+                Client client = new Client("127.0.0.1", "9866","testPlayer" + i, "pass" + i);
+                server.game.board.snakes.get(0).score = 100 * i;
+                client.close();
+            }
+            for(int i = 0; i != 4; ++i) {
+                Client client = new Client("127.0.0.1", "9866","testPlayer" + i, "pass" + i);
+                assertEquals(server.game.board.snakes.get(0).score, 100 * i);
+                client.close();
+            }
+        }
+
+        @Test(expected = IOException.class)
+        public void testShortPassword() throws IOException {
+            new Client("127.0.0.1", "9886", "testPlayer", "12");
+        }
+
 
     }
 }
